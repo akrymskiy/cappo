@@ -40,6 +40,8 @@
 
   <PropertyGroup Condition="'$(StoreBuild)' == 'true'">
     <DefineConstants>$(DefineConstants);STORE_BUILD</DefineConstants>
+    <!-- Its own output folder, so a package registered from it (Add-AppxPackage -Register) survives GitHub builds. -->
+    <BaseOutputPath>bin\Store\</BaseOutputPath>
     <!-- Registers the Windows App SDK's UniversalBGTask class in the package, which runs NetworkCheckTask. -->
     <WindowsAppSDKBackgroundTask>true</WindowsAppSDKBackgroundTask>
   </PropertyGroup>
