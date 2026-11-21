@@ -115,6 +115,34 @@ public class ParsingTests
         response.Headers.Add(PortalProxy.ErrorHeader, "dns");
         var result = await ConnectivityProbe.ClassifyAsync(response, ConnectivityProbe.ProbeUrl, TestContext.Current.CancellationToken);
         Assert.Equal(ProbeOutcome.Unreachable, result.Outcome);
+        Assert.Equal("dns", result.ProxyError);
+    }
+
+    // The probe by address, for when DNS fails: 1.1.1.1 only ever redirects plain HTTP to its own HTTPS page.
+    [Theory]
+    [InlineData(301, "https://1.1.1.1/", ProbeOutcome.Online)]
+    [InlineData(302, "http://192.168.53.1:8083/FreeUam?res=notyet&uamip=192.168.53.1", ProbeOutcome.Portal)]
+    [InlineData(302, "https://portal.example/login", ProbeOutcome.Portal)]
+    [InlineData(200, null, ProbeOutcome.Portal)]
+    [InlineData(511, null, ProbeOutcome.Portal)]
+    public async Task AddressProbeResponsesAreClassified(int status, string? location, ProbeOutcome expected)
+    {
+        using var response = new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent("<html>Sign in</html>") };
+        if (location is not null)
+            response.Headers.Location = new Uri(location);
+        var result = await ConnectivityProbe.ClassifyAddressAsync(response, ConnectivityProbe.AddressProbeUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(expected, result.Outcome);
+        Assert.Equal(expected == ProbeOutcome.Portal ? location : null, result.PortalUrl?.ToString());
+    }
+
+    [Fact]
+    public async Task TheProxysOwnErrorsMeanUnreachableForTheAddressProbeToo()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.BadGateway) { Content = new StringContent("refused") };
+        response.Headers.Add(PortalProxy.ErrorHeader, "connect");
+        var result = await ConnectivityProbe.ClassifyAddressAsync(response, ConnectivityProbe.AddressProbeUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(ProbeOutcome.Unreachable, result.Outcome);
+        Assert.Equal("connect", result.ProxyError);
     }
 
     /// <summary>Hands out a few bytes per read, like a slow network.</summary>

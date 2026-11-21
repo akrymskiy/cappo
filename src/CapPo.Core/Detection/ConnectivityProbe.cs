@@ -17,7 +17,8 @@ public enum ProbeOutcome
 }
 
 /// <param name="PortalUrl">For <see cref="ProbeOutcome.Portal"/>: where the portal redirected to, if it did.</param>
-public sealed record ProbeResult(ProbeOutcome Outcome, Uri? PortalUrl, string Detail);
+/// <param name="ProxyError">What the proxy said failed ("dns", "connect", "blocked" or "request"), if it did.</param>
+public sealed record ProbeResult(ProbeOutcome Outcome, Uri? PortalUrl, string Detail, string? ProxyError = null);
 
 /// <summary>What a network's Captive Portal API (RFC 8908) says.</summary>
 public sealed record CaptivePortalApiState(bool Captive, Uri? UserPortalUrl, TimeSpan? SecondsRemaining);
@@ -30,14 +31,23 @@ public sealed class ConnectivityProbe : IDisposable
 
     public const string ExpectedBody = "Microsoft Connect Test";
 
+    /// <summary>
+    /// Fetched when the network's DNS won't resolve <see cref="ProbeUrl"/>, which needs no DNS at all. Cloudflare's
+    /// resolver address is the same everywhere and answers plain HTTP with a redirect to its own HTTPS page; portals
+    /// answer requests to any address with their own page or a redirect to it.
+    /// </summary>
+    public static readonly Uri AddressProbeUrl = new("http://1.1.1.1/");
+
     private const int MaxBodyBytes = 64 * 1024;
 
     private readonly HttpClient _http;
 
     /// <param name="url">Null: <see cref="ProbeUrl"/>.</param>
-    public ConnectivityProbe(Uri proxy, TimeSpan timeout, Uri? url = null)
+    /// <param name="addressUrl">Null: <see cref="AddressProbeUrl"/>.</param>
+    public ConnectivityProbe(Uri proxy, TimeSpan timeout, Uri? url = null, Uri? addressUrl = null)
     {
         Url = url ?? ProbeUrl;
+        AddressUrl = addressUrl ?? AddressProbeUrl;
         _http = new HttpClient(new SocketsHttpHandler
         {
             Proxy = new WebProxy(proxy) { BypassProxyOnLocal = false },
@@ -59,15 +69,26 @@ public sealed class ConnectivityProbe : IDisposable
     /// <summary>The page this probe fetches.</summary>
     public Uri Url { get; }
 
+    /// <summary>The page fetched by address when DNS fails.</summary>
+    public Uri AddressUrl { get; }
+
     public void Dispose() => _http.Dispose();
 
-    public async Task<ProbeResult> ProbeAsync(CancellationToken cancellationToken)
+    public Task<ProbeResult> ProbeAsync(CancellationToken cancellationToken) =>
+        FetchAsync(Url, ClassifyAsync, cancellationToken);
+
+    /// <summary>Fetches <see cref="AddressUrl"/>, for when the network's DNS fails.</summary>
+    public Task<ProbeResult> ProbeAddressAsync(CancellationToken cancellationToken) =>
+        FetchAsync(AddressUrl, ClassifyAddressAsync, cancellationToken);
+
+    private async Task<ProbeResult> FetchAsync(
+        Uri url, Func<HttpResponseMessage, Uri, CancellationToken, Task<ProbeResult>> classify, CancellationToken cancellationToken)
     {
         try
         {
-            using var response = await _http.GetAsync(Url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            using var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
-            return await ClassifyAsync(response, Url, cancellationToken).ConfigureAwait(false);
+            return await classify(response, url, cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
         {
@@ -82,14 +103,12 @@ public sealed class ConnectivityProbe : IDisposable
     internal static async Task<ProbeResult> ClassifyAsync(HttpResponseMessage response, Uri url, CancellationToken cancellationToken)
     {
         var status = (int)response.StatusCode;
-        if (response.Headers.TryGetValues(PortalProxy.ErrorHeader, out var errors))
-            return new(ProbeOutcome.Unreachable, null, $"{errors.First()}: {await ReadBodyAsync(response, cancellationToken).ConfigureAwait(false)}".Trim());
+        if (await ProxyErrorAsync(response, cancellationToken).ConfigureAwait(false) is { } error)
+            return error;
 
         if (status is >= 300 and < 400)
         {
-            var location = response.Headers.Location;
-            if (location is not null && !location.IsAbsoluteUri)
-                location = new Uri(url, location);
+            var location = Location(response, url);
             return new(ProbeOutcome.Portal, location, $"HTTP {status} to {location}");
         }
 
@@ -99,6 +118,41 @@ public sealed class ConnectivityProbe : IDisposable
 
         var preview = body.Length > 60 ? body[..60] + "…" : body;
         return new(ProbeOutcome.Portal, null, $"HTTP {status}, unexpected body: {preview.ReplaceLineEndings(" ")}");
+    }
+
+    /// <summary>
+    /// Online when <see cref="AddressUrl"/> redirects to its own host (Cloudflare sending plain HTTP to HTTPS), a portal
+    /// for any other answer.
+    /// </summary>
+    internal static async Task<ProbeResult> ClassifyAddressAsync(HttpResponseMessage response, Uri url, CancellationToken cancellationToken)
+    {
+        var status = (int)response.StatusCode;
+        if (await ProxyErrorAsync(response, cancellationToken).ConfigureAwait(false) is { } error)
+            return error;
+
+        if (status is >= 300 and < 400)
+        {
+            var location = Location(response, url);
+            return string.Equals(location?.Host, url.Host, StringComparison.OrdinalIgnoreCase)
+                ? new(ProbeOutcome.Online, null, $"HTTP {status} to {location}, as {url.Host} answers")
+                : new(ProbeOutcome.Portal, location, $"HTTP {status} to {location}");
+        }
+        return new(ProbeOutcome.Portal, null, $"HTTP {status} from {url.Host}, which only redirects to HTTPS");
+    }
+
+    private static async Task<ProbeResult?> ProxyErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (!response.Headers.TryGetValues(PortalProxy.ErrorHeader, out var errors))
+            return null;
+        var kind = errors.First();
+        return new(ProbeOutcome.Unreachable, null,
+            $"{kind}: {await ReadBodyAsync(response, cancellationToken).ConfigureAwait(false)}".Trim(), kind);
+    }
+
+    private static Uri? Location(HttpResponseMessage response, Uri url)
+    {
+        var location = response.Headers.Location;
+        return location is not null && !location.IsAbsoluteUri ? new Uri(url, location) : location;
     }
 
     /// <summary>Asks the network's Captive Portal API (from DHCP option 114) whether this device is held captive.</summary>

@@ -17,6 +17,9 @@ public sealed record PortalDetectorOptions
     /// <summary>Null: <see cref="ConnectivityProbe.ProbeUrl"/>.</summary>
     public Uri? ProbeUrl { get; init; }
 
+    /// <summary>Null: <see cref="ConnectivityProbe.AddressProbeUrl"/>.</summary>
+    public Uri? AddressProbeUrl { get; init; }
+
     public TimeSpan ProbeTimeout { get; init; } = TimeSpan.FromSeconds(4);
 }
 
@@ -73,7 +76,7 @@ public sealed class PortalDetector : IAsyncDisposable
             AllowDestination = options.AllowDestination ?? PortalProxy.IsAllowedByDefault,
         };
         Proxy.Start();
-        _probe = new ConnectivityProbe(Proxy.Address, options.ProbeTimeout, options.ProbeUrl);
+        _probe = new ConnectivityProbe(Proxy.Address, options.ProbeTimeout, options.ProbeUrl, options.AddressProbeUrl);
     }
 
     /// <summary>Normally a <see cref="DhcpDnsResolver"/>, pointed at each network's DNS as it's found.</summary>
@@ -110,17 +113,25 @@ public sealed class PortalDetector : IAsyncDisposable
             _apiUrl = DhcpCaptivePortalOption.TryGetAsync(network.AdapterId, DhcpOptionTimeout);
         }
         var probe = await _probe.ProbeAsync(cancellationToken).ConfigureAwait(false);
+        var probed = _probe.Url;
+        if (probe.ProxyError == "dns")
+        {
+            // Many portals' DNS fails for outside names until sign-in, yet they catch plain HTTP to any address.
+            var byAddress = await _probe.ProbeAddressAsync(cancellationToken).ConfigureAwait(false);
+            probe = byAddress with { Detail = $"{probe.Detail} By address: {byAddress.Detail}" };
+            probed = _probe.AddressUrl;
+        }
         if (probe.Outcome == ProbeOutcome.Online)
             return Result(NetworkState.Online, network, null, probe.Detail);
 
         var api = await QueryApiAsync(cancellationToken).ConfigureAwait(false);
         if (api is { Captive: true })
-            return Result(NetworkState.Portal, network, api.UserPortalUrl ?? _probe.Url,
+            return Result(NetworkState.Portal, network, api.UserPortalUrl ?? probed,
                 $"Captive Portal API says captive; probe: {probe.Detail}");
 
-        // Open the probe page itself rather than where it redirected: redirects often carry one-time tokens.
+        // Open the probed page itself rather than where it redirected: redirects often carry one-time tokens.
         return probe.Outcome == ProbeOutcome.Portal
-            ? Result(NetworkState.Portal, network, api?.UserPortalUrl ?? _probe.Url, probe.Detail)
+            ? Result(NetworkState.Portal, network, api?.UserPortalUrl ?? probed, probe.Detail)
             : Result(NetworkState.Unreachable, network, null, probe.Detail);
     }
 
