@@ -7,8 +7,10 @@
 //   dotnet run tools/make-icons.cs            -> writes src/CapPo.App/Assets
 //   dotnet run tools/make-icons.cs -- <dir>   -> writes a preview sheet and assets to <dir> instead
 //
-// The icon is Wi-Fi arcs on a blue tile with a green check: signed in to the network. Below 32 px the check is
-// dropped to keep the arcs crisp.
+// The icon is a capo's fedora, cocked, over the bottom of Windows' Wi-Fi glyph: its dot and inner arc. It's the tray
+// icon's shape (src/CapPo.App/Tray/TrayIconRenderer.cs), in black and white with no tile:
+//   - black on light and white on dark where Windows picks by theme (the MSIX "unplated" taskbar and Start icons);
+//   - black with a white outline everywhere else (the .ico and the other logos), which holds up on either.
 
 using System.IO;
 using System.Windows;
@@ -29,15 +31,19 @@ static void Run(string outDir, bool preview)
 
     WriteIco(Path.Combine(outDir, "AppIcon.ico"), [16, 20, 24, 32, 40, 48, 64, 128, 256]);
 
-    // MSIX logos: canvas size, icon size.
-    WritePng(Path.Combine(outDir, "Square44x44Logo.scale-200.png"), 88, 88, 84);
-    WritePng(Path.Combine(outDir, "Square44x44Logo.targetsize-24_altform-unplated.png"), 24, 24, 24);
-    WritePng(Path.Combine(outDir, "Square44x44Logo.targetsize-48_altform-lightunplated.png"), 48, 48, 48);
-    WritePng(Path.Combine(outDir, "Square150x150Logo.scale-200.png"), 300, 300, 192);
-    WritePng(Path.Combine(outDir, "Wide310x150Logo.scale-200.png"), 620, 300, 192);
-    WritePng(Path.Combine(outDir, "SplashScreen.scale-200.png"), 1240, 600, 320);
-    WritePng(Path.Combine(outDir, "LockScreenLogo.scale-200.png"), 48, 48, 48);
-    WritePng(Path.Combine(outDir, "StoreLogo.png"), 50, 50, 50);
+    // MSIX logos: canvas size, icon size, style.
+    WritePng(Path.Combine(outDir, "Square44x44Logo.scale-200.png"), 88, 88, 84, Style.Outlined);
+    foreach (var size in new[] { 16, 24, 32, 48, 256 })
+    {
+        WritePng(Path.Combine(outDir, $"Square44x44Logo.targetsize-{size}_altform-unplated.png"), size, size, size, Style.White);
+        WritePng(Path.Combine(outDir, $"Square44x44Logo.targetsize-{size}_altform-lightunplated.png"), size, size, size, Style.Black);
+    }
+    WritePng(Path.Combine(outDir, "Square150x150Logo.scale-200.png"), 300, 300, 192, Style.Outlined);
+    WritePng(Path.Combine(outDir, "Wide310x150Logo.scale-200.png"), 620, 300, 192, Style.Outlined);
+    WritePng(Path.Combine(outDir, "SplashScreen.scale-200.png"), 1240, 600, 320, Style.Outlined);
+    // The lock screen shows its badge logo in white.
+    WritePng(Path.Combine(outDir, "LockScreenLogo.scale-200.png"), 48, 48, 48, Style.White);
+    WritePng(Path.Combine(outDir, "StoreLogo.png"), 50, 50, 50, Style.Outlined);
 
     if (preview)
         WritePreview(Path.Combine(outDir, "preview.png"));
@@ -45,49 +51,61 @@ static void Run(string outDir, bool preview)
     Console.WriteLine($"Wrote icons to {outDir}");
 }
 
-static void DrawIcon(DrawingContext dc, double x, double y, double size)
+static void DrawIcon(DrawingContext dc, double x, double y, double size, Style style)
 {
-    var detailed = size >= 32;
+    // The glyph is designed on a 16x16 grid; it fills the icon but for room for the outline.
+    const double Scale = 14.5;
     dc.PushTransform(new TranslateTransform(x, y));
     dc.PushTransform(new ScaleTransform(size / 256, size / 256));
+    dc.PushTransform(new TranslateTransform(128 - (8 * Scale), 128 - (8 * Scale)));
+    dc.PushTransform(new ScaleTransform(Scale, Scale));
 
-    // Soft contact shadow, then the tile.
-    dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(48, 0, 0, 0)), null, new Rect(20, 30, 216, 216), 52, 52);
-    dc.DrawRoundedRectangle(Gradient("#3A8DF0", "#1B4FA8"), new Pen(Gradient("#7DB7FF", "#163F86"), 3), new Rect(16, 16, 224, 224), 52, 52);
-
-    // Wi-Fi: a dot and three arcs, 45° either side of straight up.
-    var white = new SolidColorBrush(Hex("#FFFFFF"));
-    var center = new Point(detailed ? 120 : 128, detailed ? 186 : 194);
-    var stroke = detailed ? 22.0 : 30.0;
-    double[] radii = detailed ? [40, 76, 112] : [50, 98];
-    foreach (var radius in radii)
+    var glyph = Glyph();
+    var black = new SolidColorBrush(Hex("#141414"));
+    switch (style)
     {
-        var start = new Point(center.X - (radius * Math.Sin(Math.PI / 4)), center.Y - (radius * Math.Cos(Math.PI / 4)));
-        var end = new Point(center.X + (radius * Math.Sin(Math.PI / 4)), start.Y);
-        var arc = new PathGeometry([new PathFigure(start, [new ArcSegment(end, new Size(radius, radius), 0, false, SweepDirection.Clockwise, true)], false)]);
-        dc.DrawGeometry(null, new Pen(white, stroke) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, arc);
-    }
-    dc.DrawEllipse(white, null, center, stroke * 0.85, stroke * 0.85);
-
-    if (detailed)
-    {
-        // The check: signed in. A ring the tile's colour keeps it apart from the arcs.
-        var badge = new Point(190, 186);
-        dc.DrawEllipse(new SolidColorBrush(Hex("#1D56B5")), null, badge, 44, 44);
-        dc.DrawEllipse(Gradient("#4BE39A", "#13A35E"), null, badge, 34, 34);
-        var check = new PathGeometry([new PathFigure(new Point(172, 187), [
-            new LineSegment(new Point(185, 200), true),
-            new LineSegment(new Point(208, 174), true)], false)]);
-        dc.DrawGeometry(null, new Pen(white, 9) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round }, check);
+        case Style.Black:
+            dc.DrawGeometry(black, null, glyph);
+            break;
+        case Style.White:
+            dc.DrawGeometry(Brushes.White, null, glyph);
+            break;
+        default:
+            dc.DrawGeometry(Brushes.White, new Pen(Brushes.White, 0.8) { LineJoin = PenLineJoin.Round }, glyph);
+            dc.DrawGeometry(black, null, glyph);
+            break;
     }
 
+    dc.Pop();
+    dc.Pop();
     dc.Pop();
     dc.Pop();
 }
 
-static void WritePng(string path, int width, int height, double iconSize)
+// The tray icon's shapes, as in TrayIconRenderer: crown and brim cocked 5 degrees about (8, 5); a dot, and an arc around
+// it 64.7 degrees either side of straight up, 1.02 wide, with round ends.
+static Geometry Glyph()
 {
-    var bitmap = Render(width, height, dc => DrawIcon(dc, (width - iconSize) / 2, (height - iconSize) / 2, iconSize));
+    const string Crown = "M 3.5,7.9 C 3.75,5.6 4.0,3.6 4.35,2.35 C 4.55,1.7 5.1,1.4 5.9,1.45 C 6.8,1.52 7.3,1.95 8,1.95 "
+        + "C 8.7,1.95 9.2,1.52 10.1,1.45 C 10.9,1.4 11.45,1.7 11.65,2.35 C 12,3.6 12.25,5.6 12.5,7.9 Z";
+    const string Brim = "M 0.35,6.2 C 0.6,6.05 0.95,6.05 1.3,6.2 C 3.3,6.95 5.2,7.15 8,7.15 C 10.8,7.15 12.7,6.95 14.7,6.2 "
+        + "C 15.05,6.05 15.4,6.05 15.65,6.2 C 14.9,7.95 12,9.05 8,9.05 C 4,9.05 1.1,7.95 0.35,6.2 Z";
+    var hat = new GeometryGroup { FillRule = FillRule.Nonzero, Children = { Geometry.Parse(Crown), Geometry.Parse(Brim) } };
+    hat.Transform = new RotateTransform(5, 8, 5);
+
+    var dot = new Point(8, 14.6);
+    const double Radius = 3.5, Half = 64.7 * Math.PI / 180;
+    var start = new Point(dot.X - (Radius * Math.Sin(Half)), dot.Y - (Radius * Math.Cos(Half)));
+    var end = new Point(dot.X + (Radius * Math.Sin(Half)), start.Y);
+    var arc = new PathGeometry([new PathFigure(start, [new ArcSegment(end, new Size(Radius, Radius), 0, false, SweepDirection.Clockwise, true)], false)])
+        .GetWidenedPathGeometry(new Pen(Brushes.Black, 1.02) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, 0.001, ToleranceType.Absolute);
+
+    return new GeometryGroup { FillRule = FillRule.Nonzero, Children = { hat, new EllipseGeometry(dot, 1.25, 1.25), arc } };
+}
+
+static void WritePng(string path, int width, int height, double iconSize, Style style)
+{
+    var bitmap = Render(width, height, dc => DrawIcon(dc, (width - iconSize) / 2, (height - iconSize) / 2, iconSize, style));
     using var file = File.Create(path);
     Encode(bitmap, file);
 }
@@ -98,7 +116,7 @@ static void WriteIco(string path, int[] sizes)
     var images = sizes.Select(s =>
     {
         using var ms = new MemoryStream();
-        Encode(Render(s, s, dc => DrawIcon(dc, 0, 0, s)), ms);
+        Encode(Render(s, s, dc => DrawIcon(dc, 0, 0, s, Style.Outlined)), ms);
         return ms.ToArray();
     }).ToArray();
 
@@ -124,22 +142,29 @@ static void WriteIco(string path, int[] sizes)
         w.Write(image);
 }
 
+// Each style at each size, on light and on dark.
 static void WritePreview(string path)
 {
     int[] sizes = [16, 24, 32, 48, 64, 128, 256];
+    Style[] styles = [Style.Outlined, Style.Black, Style.White];
     var width = sizes.Sum() + (24 * (sizes.Length + 1));
     var rowHeight = 256 + 48;
-    var bitmap = Render(width, rowHeight * 2, dc =>
+    var bitmap = Render(width, rowHeight * styles.Length * 2, dc =>
     {
-        foreach (var (row, bg) in new[] { (0, "#F3F3F3"), (1, "#202020") })
+        var row = 0;
+        foreach (var style in styles)
         {
-            dc.DrawRectangle(new SolidColorBrush(Hex(bg)), null, new Rect(0, row * rowHeight, width, rowHeight));
-            double x = 24;
-            foreach (var s in sizes)
+            foreach (var bg in new[] { "#F3F3F3", "#202020" })
             {
-                var small = Render(s, s, c => DrawIcon(c, 0, 0, s));
-                dc.DrawImage(small, new Rect(x, (row * rowHeight) + 24 + (256 - s), s, s));
-                x += s + 24;
+                dc.DrawRectangle(new SolidColorBrush(Hex(bg)), null, new Rect(0, row * rowHeight, width, rowHeight));
+                double x = 24;
+                foreach (var s in sizes)
+                {
+                    var small = Render(s, s, c => DrawIcon(c, 0, 0, s, style));
+                    dc.DrawImage(small, new Rect(x, (row * rowHeight) + 24 + (256 - s), s, s));
+                    x += s + 24;
+                }
+                row++;
             }
         }
     });
@@ -166,7 +191,12 @@ static void Encode(BitmapSource bitmap, Stream stream)
     encoder.Save(stream);
 }
 
-static LinearGradientBrush Gradient(string top, string bottom) =>
-    new(Hex(top), Hex(bottom), new Point(0, 0), new Point(0, 1));
-
 static Color Hex(string hex) => (Color)ColorConverter.ConvertFromString(hex);
+
+enum Style
+{
+    /// <summary>Black with a white outline: for places that may be light or dark.</summary>
+    Outlined,
+    Black,
+    White,
+}
