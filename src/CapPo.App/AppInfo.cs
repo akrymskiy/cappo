@@ -10,9 +10,9 @@ internal static partial class AppInfo
 
     // Links on the About page. An empty one isn't shown.
     public const string GitHubUrl = "https://github.com/akrymskiy/cappo";
-    public const string SponsorUrl = "https://github.com/sponsors/akrymskiy";
-    /// <summary>Placeholder: fill in the Buy Me a Coffee page (as in .github/FUNDING.yml) to show its link.</summary>
-    public const string BuyMeACoffeeUrl = "";
+    /// <summary>Empty until GitHub Sponsors is approved: https://github.com/sponsors/akrymskiy</summary>
+    public const string SponsorUrl = "";
+    public const string BuyMeACoffeeUrl = "https://buymeacoffee.com/akrymskiy";
     public const string PrivacyUrl = GitHubUrl + "/blob/main/PRIVACY.md";
     public const string LicenseUrl = GitHubUrl + "/blob/main/LICENSE";
     public const string LicenseName = "GNU General Public License v3.0";

@@ -35,7 +35,7 @@ Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in windo
 
 ## Support the project
 
-If CapPo saves you some hassle, you can [sponsor it on GitHub](https://github.com/sponsors/akrymskiy) or buy it from the Microsoft Store.
+If CapPo saves you some hassle, you can [buy me a coffee](https://buymeacoffee.com/akrymskiy) or buy it from the Microsoft Store.
 
 ## Building
 
