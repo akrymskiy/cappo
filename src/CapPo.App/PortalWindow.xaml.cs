@@ -17,6 +17,7 @@ public sealed partial class PortalWindow : Window
     private static readonly TimeSpan CloseDelay = TimeSpan.FromSeconds(1.5);
 
     private readonly int _proxyPort;
+    private readonly WindowIcon _icon;
     private Uri _signInUrl;
     private bool _closingForGood;
     private bool _clicked;
@@ -29,7 +30,7 @@ public sealed partial class PortalWindow : Window
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon("Assets/AppIcon.ico");
+        _icon = new WindowIcon(this, AppTitleBar);
         Size(1000, 780);
         Update(result);
         Activated += OnActivated;
@@ -165,6 +166,7 @@ public sealed partial class PortalWindow : Window
     {
         var name = Engine.NetworkName(result);
         Title = AppTitleBar.Title = $"Sign in to {name}";
+        _icon.Show(signIn: result.State == NetworkState.Portal);
         StatusText.Text = result.State switch
         {
             NetworkState.Portal => $"Waiting for you to sign in to {name}. CapPo checks every few seconds.",

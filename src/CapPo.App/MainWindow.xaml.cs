@@ -12,12 +12,15 @@ public sealed partial class MainWindow : Window
 {
     private const int OpenWidth = 760, OpenHeight = 640;
 
+    private readonly WindowIcon _icon;
+
     public MainWindow()
     {
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon("Assets/AppIcon.ico");
+        _icon = new WindowIcon(this, AppTitleBar);
+        _icon.Show(signIn: false);
 
         var scale = Tray.NativeMethods.GetDpiForWindow(Handle) / 96.0;
         var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
@@ -27,6 +30,9 @@ public sealed partial class MainWindow : Window
     }
 
     public nint Handle => WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+    /// <summary>The feather in the icon while a portal waits for a sign-in, as in the tray.</summary>
+    public void ShowSignInIcon(bool signIn) => _icon.Show(signIn);
 
     public void ShowPage(bool about) => NavView.SelectedItem = NavView.MenuItems[about ? 1 : 0];
 

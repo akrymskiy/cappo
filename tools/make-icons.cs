@@ -11,6 +11,7 @@
 // icon's shape (src/CapPo.App/Tray/TrayIconRenderer.cs), in black and white with no tile:
 //   - black on light and white on dark where Windows picks by theme (the MSIX "unplated" taskbar and Start icons);
 //   - black with a white outline everywhere else (the .ico and the other logos), which holds up on either.
+// AppIconSignIn.ico adds the tray icon's feather: the windows show it while a portal waits for a sign-in.
 
 using System.IO;
 using System.Windows;
@@ -29,7 +30,8 @@ static void Run(string outDir, bool preview)
 {
     Directory.CreateDirectory(outDir);
 
-    WriteIco(Path.Combine(outDir, "AppIcon.ico"), [16, 20, 24, 32, 40, 48, 64, 128, 256]);
+    WriteIco(Path.Combine(outDir, "AppIcon.ico"), [16, 20, 24, 32, 40, 48, 64, 128, 256], feather: false);
+    WriteIco(Path.Combine(outDir, "AppIconSignIn.ico"), [16, 20, 24, 32, 40, 48, 64, 128, 256], feather: true);
 
     // MSIX logos: canvas size, icon size, style.
     WritePng(Path.Combine(outDir, "Square44x44Logo.scale-200.png"), 88, 88, 84, Style.Outlined);
@@ -51,7 +53,7 @@ static void Run(string outDir, bool preview)
     Console.WriteLine($"Wrote icons to {outDir}");
 }
 
-static void DrawIcon(DrawingContext dc, double x, double y, double size, Style style)
+static void DrawIcon(DrawingContext dc, double x, double y, double size, Style style, bool feather = false)
 {
     // The glyph is designed on a 16x16 grid; it fills the icon but for room for the outline.
     const double Scale = 14.5;
@@ -60,7 +62,7 @@ static void DrawIcon(DrawingContext dc, double x, double y, double size, Style s
     dc.PushTransform(new TranslateTransform(128 - (8 * Scale), 128 - (8 * Scale)));
     dc.PushTransform(new ScaleTransform(Scale, Scale));
 
-    var glyph = Glyph();
+    var glyph = Glyph(feather);
     var black = new SolidColorBrush(Hex("#141414"));
     switch (style)
     {
@@ -83,8 +85,9 @@ static void DrawIcon(DrawingContext dc, double x, double y, double size, Style s
 }
 
 // The tray icon's shapes, as in TrayIconRenderer: crown and brim cocked 5 degrees about (8, 5); a dot, and an arc around
-// it 64.7 degrees either side of straight up, 1.02 wide, with round ends.
-static Geometry Glyph()
+// it 64.7 degrees either side of straight up, 1.02 wide, with round ends. The feather is an ellipse turned 30 degrees
+// at (12.7, 3.7) before the tilt, with a 0.65 gap cut around it in the hat.
+static Geometry Glyph(bool feather)
 {
     const string Crown = "M 3.5,7.9 C 3.75,5.6 4.0,3.6 4.35,2.35 C 4.55,1.7 5.1,1.4 5.9,1.45 C 6.8,1.52 7.3,1.95 8,1.95 "
         + "C 8.7,1.95 9.2,1.52 10.1,1.45 C 10.9,1.4 11.45,1.7 11.65,2.35 C 12,3.6 12.25,5.6 12.5,7.9 Z";
@@ -92,6 +95,16 @@ static Geometry Glyph()
         + "C 15.05,6.05 15.4,6.05 15.65,6.2 C 14.9,7.95 12,9.05 8,9.05 C 4,9.05 1.1,7.95 0.35,6.2 Z";
     var hat = new GeometryGroup { FillRule = FillRule.Nonzero, Children = { Geometry.Parse(Crown), Geometry.Parse(Brim) } };
     hat.Transform = new RotateTransform(5, 8, 5);
+    Geometry crowned = hat;
+    if (feather)
+    {
+        Geometry Feather(double grow) => new EllipseGeometry(new Point(0, 0), 1.05 + grow, 3.3 + grow)
+        {
+            Transform = new TransformGroup { Children = { new RotateTransform(30), new TranslateTransform(12.7, 3.7), new RotateTransform(5, 8, 5) } },
+        };
+        crowned = Geometry.Combine(Geometry.Combine(hat, Feather(0.65), GeometryCombineMode.Exclude, null, 0.001, ToleranceType.Absolute),
+            Feather(0), GeometryCombineMode.Union, null, 0.001, ToleranceType.Absolute);
+    }
 
     var dot = new Point(8, 14.6);
     const double Radius = 3.5, Half = 64.7 * Math.PI / 180;
@@ -100,7 +113,7 @@ static Geometry Glyph()
     var arc = new PathGeometry([new PathFigure(start, [new ArcSegment(end, new Size(Radius, Radius), 0, false, SweepDirection.Clockwise, true)], false)])
         .GetWidenedPathGeometry(new Pen(Brushes.Black, 1.02) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, 0.001, ToleranceType.Absolute);
 
-    return new GeometryGroup { FillRule = FillRule.Nonzero, Children = { hat, new EllipseGeometry(dot, 1.25, 1.25), arc } };
+    return new GeometryGroup { FillRule = FillRule.Nonzero, Children = { crowned, new EllipseGeometry(dot, 1.25, 1.25), arc } };
 }
 
 static void WritePng(string path, int width, int height, double iconSize, Style style)
@@ -111,12 +124,12 @@ static void WritePng(string path, int width, int height, double iconSize, Style 
 }
 
 // ICO with PNG-compressed entries, which Windows Vista and later read at every size.
-static void WriteIco(string path, int[] sizes)
+static void WriteIco(string path, int[] sizes, bool feather)
 {
     var images = sizes.Select(s =>
     {
         using var ms = new MemoryStream();
-        Encode(Render(s, s, dc => DrawIcon(dc, 0, 0, s, Style.Outlined)), ms);
+        Encode(Render(s, s, dc => DrawIcon(dc, 0, 0, s, Style.Outlined, feather)), ms);
         return ms.ToArray();
     }).ToArray();
 

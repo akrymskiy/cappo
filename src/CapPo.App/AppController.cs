@@ -55,6 +55,9 @@ internal sealed class AppController
 
     public string NetworkName => _networkName.Name;
 
+    /// <summary>A portal waits for a sign-in that CapPo can help with: the tray and window icons show the feather.</summary>
+    public bool SignInNeeded => Last?.State == NetworkState.Portal && License.IsUsable;
+
     public string StatusTitle => !License.IsUsable
         ? "Trial ended"
         : Last?.State switch
@@ -139,6 +142,7 @@ internal sealed class AppController
             };
         }
         _main.ShowPage(about);
+        _main.ShowSignInIcon(SignInNeeded);
         _main.Activate();
     }
 
@@ -265,6 +269,7 @@ internal sealed class AppController
         if (result.Network?.Fingerprint != _networkName.Fingerprint)
             _networkName = (result.Network?.Fingerprint, Engine.NetworkName(result));
         _tray?.Update();
+        _main?.ShowSignInIcon(SignInNeeded);
         if (_reportNextCheck)
         {
             _reportNextCheck = false;
