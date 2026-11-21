@@ -23,7 +23,7 @@ internal static class RunModeSetup
         try
         {
             if (settings.Mode == RunMode.OnDemand)
-                await OnDemandTrigger.RegisterAsync(settings.RecheckInterval);
+                await OnDemandTrigger.RegisterAsync(TimeSpan.FromMinutes(settings.OnDemandMinutes));
             else
                 await OnDemandTrigger.UnregisterAsync();
         }

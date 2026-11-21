@@ -26,7 +26,7 @@ When CapPo opens the sign-in window, Windows may open its own browser at the por
 - **The network's DNS, inside the sign-in window only.** CapPo reads the DNS servers the network handed out (DHCP) and runs a small proxy on your PC (127.0.0.1) that looks names up with them. Only CapPo's sign-in window uses that proxy. Everything else keeps using your encrypted DNS.
 - **Your system DNS is never touched.** CapPo doesn't change Windows' DNS settings, and it needs no administrator rights.
 - **It checks the way Windows does.** CapPo fetches Microsoft's connectivity test page through its proxy. If something else answers, a portal is in the way, and CapPo opens the sign-in window. It also supports networks that announce their portal ([RFC 8910](https://www.rfc-editor.org/rfc/rfc8910) / [RFC 8908](https://www.rfc-editor.org/rfc/rfc8908)).
-- **It notices when you're through.** CapPo keeps checking every few seconds while you sign in. Once you're online, it closes the window and flushes Windows' DNS cache, which still holds the failed lookups from before. Later it checks again every 15 to 60 minutes (your choice), for portals that capture you again when a session runs out.
+- **It notices when you're through.** CapPo keeps checking every few seconds while you sign in. Once you're online, it closes the window and flushes Windows' DNS cache, which still holds the failed lookups from before. Later it checks again every 5 to 60 minutes (your choice; at least 15 in the Store version's On demand mode), for portals that capture you again when a session runs out.
 
 CapPo runs in one of two modes (Settings):
 

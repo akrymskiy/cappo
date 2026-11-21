@@ -14,8 +14,18 @@ public enum RunMode
 /// <summary>CapPo's preferences, in settings.json in <see cref="AppInfo.DataDirectory"/>.</summary>
 public sealed class AppSettings
 {
-    /// <summary>The choices for <see cref="RecheckMinutes"/>. Background tasks can't run more often than every 15.</summary>
-    public static readonly int[] RecheckChoices = [15, 20, 30, 60];
+    /// <summary>The choices for <see cref="RecheckMinutes"/>.</summary>
+    public static readonly int[] RecheckChoices = [5, 15, 20, 30, 60];
+
+    /// <summary>
+    /// On demand mode's floor. The Store build's background task timer won't run more often than every 15 minutes; the
+    /// GitHub build's scheduled task can, and its check (<c>--check</c>) is quick.
+    /// </summary>
+#if STORE_BUILD
+    public const int OnDemandMinimumMinutes = 15;
+#else
+    public const int OnDemandMinimumMinutes = 5;
+#endif
 
     private static string FilePath => Path.Combine(AppInfo.DataDirectory, "settings.json");
 
@@ -35,6 +45,10 @@ public sealed class AppSettings
 
     [JsonIgnore]
     public TimeSpan RecheckInterval => TimeSpan.FromMinutes(Math.Max(RecheckMinutes, RecheckChoices[0]));
+
+    /// <summary>How often On demand mode has Windows start CapPo: the re-check interval, but not under the floor.</summary>
+    [JsonIgnore]
+    public int OnDemandMinutes => Math.Max(RecheckMinutes, OnDemandMinimumMinutes);
 
     public static AppSettings Load()
     {
