@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- The Store build's package (StoreBuild=true); the GitHub build is unpackaged and doesn't use it. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap5 uap10 com rescap">
+
+  <!--
+    Identity must match Partner Center (Product identity) exactly. The publisher is the account's (as for Firmly);
+    the name is a placeholder until CapPo is reserved there.
+  -->
+  <Identity
+    Name="AlexKrymskiy.CapPo"
+    Publisher="CN=1F69C46A-C1B5-4AA6-9EBE-60DF36002C10"
+    Version="0.1.0.0" />
+
+  <Properties>
+    <DisplayName>CapPo</DisplayName>
+    <PublisherDisplayName>Alex Krymskiy</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on"/>
+    </uap10:PackageIntegrity>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26226.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="CapPo"
+        Description="Sign in to hotel and library Wi-Fi while keeping encrypted DNS on."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- "Launch at login" (Always running mode); CapPo then starts in the notification area. -->
+        <uap5:Extension Category="windows.startupTask" Executable="CapPo.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap5:StartupTask TaskId="CapPoStartup" Enabled="false" DisplayName="CapPo" />
+        </uap5:Extension>
+        <!--
+          On demand mode: the Windows App SDK's BackgroundTaskBuilder runs NetworkCheckTask (Background\NetworkCheckTask.cs)
+          on network changes and on a timer, through this COM class in CapPo.exe.
+        -->
+        <Extension Category="windows.backgroundTasks" EntryPoint="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.Task">
+          <BackgroundTasks>
+            <Task Type="general" />
+            <Task Type="systemEvent" />
+            <Task Type="timer" />
+          </BackgroundTasks>
+        </Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="CapPo.exe" Arguments="-RegisterForBGTaskServer" DisplayName="CapPo network check"
+              LaunchAndActivationPermission="O:PSG:BUD:(A;;11;;;IU)(A;;11;;;S-1-15-2-1)S:(ML;;NX;;;LW)">
+              <com:Class Id="7C3E1A52-4B8D-4F2E-9A61-0D5B8E7C2F14" DisplayName="CapPo network check" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <!--
+    The Windows App SDK's in-package class that backgroundtaskhost loads for the windows.backgroundTasks extension
+    above; it hands each task to NetworkCheckTask's COM class. Neither the build nor the framework package declares it.
+  -->
+  <Extensions>
+    <Extension Category="windows.activatableClass.inProcessServer">
+      <InProcessServer>
+        <Path>Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll</Path>
+        <ActivatableClass ActivatableClassId="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.Task" ThreadingModel="both" />
+      </InProcessServer>
+    </Extension>
+  </Extensions>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

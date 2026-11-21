@@ -4,6 +4,7 @@
     <Platform Name="ARM64" />
   </Configurations>
   <Folder Name="/src/">
+    <Project Path="src/CapPo.App/CapPo.App.csproj" />
     <Project Path="src/CapPo.Core/CapPo.Core.csproj" />
     <Project Path="src/CapPo.Poc/CapPo.Poc.csproj" />
   </Folder>

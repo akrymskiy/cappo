@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="CapPo.App.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <StackPanel MaxWidth="760" Padding="32,8,32,32" Spacing="4">
+            <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Spacing="16">
+                <Image Width="48" Height="48" Source="ms-appx:///Assets/AppIcon.ico" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="CapPo" />
+                    <TextBlock x:Name="VersionText" Style="{StaticResource SecondaryTextStyle}" IsTextSelectionEnabled="True" />
+                </StackPanel>
+            </StackPanel>
+
+            <Grid Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock TextWrapping="Wrap" Text="CapPo lets you keep encrypted DNS on (DNS over HTTPS, with no fallback to plain DNS) and still sign in to hotel, library and café Wi-Fi." />
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Those networks' sign-in pages only appear through the network's own DNS. CapPo uses it inside its sign-in window only, through a small proxy on this PC. Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Links" />
+            <Grid Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <HyperlinkButton x:Name="GitHubLink" Content="Source code on GitHub" />
+                    <HyperlinkButton x:Name="SponsorLink" Content="Sponsor on GitHub" />
+                    <HyperlinkButton x:Name="CoffeeLink" Content="Buy me a coffee" />
+                    <HyperlinkButton x:Name="PrivacyLink" Content="Privacy" />
+                    <HyperlinkButton Click="OnOpenDataFolder" Content="Open CapPo's folder (settings and log)" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Privacy" />
+            <Grid Style="{StaticResource CardStyle}">
+                <TextBlock TextWrapping="Wrap" Text="CapPo has no telemetry or analytics, and collects nothing. Its settings and log stay on this PC." />
+            </Grid>
+
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="License" />
+            <Grid Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="LicenseText" TextWrapping="Wrap" />
+                    <HyperlinkButton x:Name="LicenseLink" Padding="0" Content="Read the license" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,222 @@
+using System.Runtime.InteropServices;
+using Windows.Graphics;
+using static CapPo.App.Tray.NativeMethods;
+
+namespace CapPo.App.Tray;
+
+/// <summary>An entry in the tray icon's menu. <see cref="Id"/> 0 marks a heading or separator that can't be chosen.</summary>
+internal sealed record TrayMenuItem(string Text, int Id = 0, bool Checked = false)
+{
+    public static TrayMenuItem Separator { get; } = new("-");
+}
+
+/// <summary>
+/// One icon in the notification area (tray), with a tooltip and a native popup menu.
+/// Lives on the UI thread: its hidden window receives the icon's mouse and keyboard events there.
+/// </summary>
+internal sealed unsafe class TrayIcon : IDisposable
+{
+    private const string WindowClass = "CapPo.TrayIcon";
+    private const uint CallbackMessage = WM_APP + 1;
+
+    // The window procedure is static (it's called from native code); there's one tray icon per process.
+    private static TrayIcon? s_current;
+
+    private readonly nint _hwnd;
+    // Explorer broadcasts this when it restarts and the notification area is rebuilt.
+    private readonly uint _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
+    private nint _icon;
+    private string _tip = "";
+
+    public TrayIcon()
+    {
+        DarkMenus.Enable();
+        var instance = GetModuleHandle(null);
+        fixed (char* className = WindowClass)
+        {
+            var windowClass = new WNDCLASSEXW
+            {
+                cbSize = (uint)sizeof(WNDCLASSEXW),
+                lpfnWndProc = &WindowProc,
+                hInstance = instance,
+                lpszClassName = className,
+            };
+            RegisterClassEx(&windowClass);
+        }
+
+        // A hidden top-level window, not a message-only one: those don't receive the TaskbarCreated broadcast.
+        _hwnd = CreateWindowEx(0, WindowClass, "CapPo tray", 0, 0, 0, 0, 0, 0, 0, instance, 0);
+        if (_hwnd == 0)
+            throw new InvalidOperationException($"Couldn't create the tray icon's window (error {Marshal.GetLastPInvokeError()}).");
+        s_current = this;
+    }
+
+    /// <summary>Clicked, or chosen with the keyboard (true); carries where the icon is, in screen pixels.</summary>
+    public event Action<RectInt32, bool>? Selected;
+
+    /// <summary>Right-clicked, or the menu key pressed; the menu should open at the given screen point.</summary>
+    public event Action<int, int>? MenuRequested;
+
+    /// <summary>Windows switched between light and dark, so the icon may need redrawing.</summary>
+    public event Action? ThemeChanged;
+
+    /// <summary>The DPI the notification area draws at, for sizing the icon.</summary>
+    public uint Dpi => GetDpiForWindow(_hwnd) is var dpi and > 0 ? dpi : 96;
+
+    /// <summary>Shows the icon, or updates it. The caller keeps ownership of <paramref name="icon"/>.</summary>
+    /// <param name="tip">At most 127 characters; longer ones are cut.</param>
+    public void Update(nint icon, string tip)
+    {
+        _icon = icon;
+        _tip = tip;
+
+        // Modify even when adding seemed to fail: Shell_NotifyIcon also fails when Explorer is too slow to answer,
+        // e.g. around Modern Standby, though the icon is there. Adding it again would then fail every time, leaving
+        // the icon stuck on what it showed before.
+        var data = NewData(NIF_ICON | NIF_TIP | NIF_SHOWTIP);
+        if (!Shell_NotifyIcon(NIM_MODIFY, &data))
+            Add();
+    }
+
+    /// <summary>Shows a notification from the icon, e.g. when an action from its menu failed.</summary>
+    public void Notify(string title, string text, bool warning = false)
+    {
+        var data = NewData(NIF_INFO);
+        Copy(title, data.szInfoTitle, 64);
+        Copy(text, data.szInfo, 256);
+        data.dwInfoFlags = warning ? NIIF_WARNING : NIIF_NONE;
+        Shell_NotifyIcon(NIM_MODIFY, &data);
+    }
+
+    /// <summary>Shows a menu at (<paramref name="x"/>, <paramref name="y"/>) and waits for a choice.</summary>
+    /// <returns>The chosen item's <see cref="TrayMenuItem.Id"/>, or 0 when the menu was dismissed.</returns>
+    public int ShowMenu(IReadOnlyList<TrayMenuItem> items, int x, int y)
+    {
+        var menu = BuildMenu(items);
+        try
+        {
+            // Without this the menu doesn't close when clicking elsewhere (documented TrackPopupMenu behaviour).
+            SetForegroundWindow(_hwnd);
+            var id = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, x, y, _hwnd, 0);
+            PostMessage(_hwnd, WM_NULL, 0, 0);
+            return id;
+        }
+        finally
+        {
+            DestroyMenu(menu);
+        }
+    }
+
+    public void Dispose()
+    {
+        // Even when adding seemed to fail: the icon may be there all the same.
+        var data = NewData(0);
+        Shell_NotifyIcon(NIM_DELETE, &data);
+        DestroyWindow(_hwnd);
+        if (s_current == this)
+            s_current = null;
+    }
+
+    // Where the icon is; just the anchor point when the shell won't say.
+    private RectInt32 Bounds(int anchorX, int anchorY)
+    {
+        var identifier = new NOTIFYICONIDENTIFIER { cbSize = (uint)sizeof(NOTIFYICONIDENTIFIER), hWnd = _hwnd, uID = 1 };
+        RECT rect;
+        return Shell_NotifyIconGetRect(&identifier, &rect) >= 0
+            ? new RectInt32(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top)
+            : new RectInt32(anchorX, anchorY, 1, 1);
+    }
+
+    private void Add()
+    {
+        var data = NewData(NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP);
+        Shell_NotifyIcon(NIM_ADD, &data);
+
+        // Version 4: one message per click or key, with the anchor point for the menu. Set even when adding seemed
+        // to fail, in case Explorer added the icon after all.
+        data.uVersion = NOTIFYICON_VERSION_4;
+        Shell_NotifyIcon(NIM_SETVERSION, &data);
+    }
+
+    private NOTIFYICONDATAW NewData(uint flags)
+    {
+        var data = new NOTIFYICONDATAW
+        {
+            cbSize = (uint)sizeof(NOTIFYICONDATAW),
+            hWnd = _hwnd,
+            uID = 1,
+            uFlags = flags,
+            uCallbackMessage = CallbackMessage,
+            hIcon = _icon,
+        };
+        Copy(_tip, data.szTip, 128);
+        return data;
+    }
+
+    private static void Copy(string text, char* buffer, int capacity)
+    {
+        var length = Math.Min(text.Length, capacity - 1);
+        text.AsSpan(0, length).CopyTo(new Span<char>(buffer, capacity));
+        buffer[length] = '\0';
+    }
+
+    private static nint BuildMenu(IReadOnlyList<TrayMenuItem> items)
+    {
+        var menu = CreatePopupMenu();
+        foreach (var item in items)
+        {
+            if (ReferenceEquals(item, TrayMenuItem.Separator))
+            {
+                AppendMenu(menu, MF_SEPARATOR, 0, null);
+                continue;
+            }
+
+            AppendMenu(menu, MF_STRING | (item.Id != 0 ? 0 : MF_GRAYED) | (item.Checked ? MF_CHECKED : 0), (nuint)item.Id, item.Text);
+        }
+        return menu;
+    }
+
+    [UnmanagedCallersOnly]
+    private static nint WindowProc(nint hwnd, uint message, nint wParam, nint lParam)
+    {
+        // An exception can't cross back into native code; it would end the process.
+        try
+        {
+            if (s_current is { } icon && hwnd == icon._hwnd)
+            {
+                if (message == CallbackMessage)
+                {
+                    var anchorX = (short)(wParam & 0xFFFF);
+                    var anchorY = (short)((wParam >> 16) & 0xFFFF);
+                    switch ((uint)(lParam & 0xFFFF))
+                    {
+                        case (NIN_SELECT or NIN_KEYSELECT) and var selected:
+                            icon.Selected?.Invoke(icon.Bounds(anchorX, anchorY), selected == NIN_KEYSELECT);
+                            break;
+                        case WM_CONTEXTMENU:
+                            icon.MenuRequested?.Invoke(anchorX, anchorY);
+                            break;
+                    }
+                    return 0;
+                }
+
+                // "ImmersiveColorSet": light or dark mode changed.
+                if (message == WM_SETTINGCHANGE && lParam != 0
+                    && new string((char*)lParam) == "ImmersiveColorSet")
+                {
+                    DarkMenus.Refresh();
+                    icon.ThemeChanged?.Invoke();
+                }
+
+                if (message == icon._taskbarCreated && icon._taskbarCreated != 0)
+                    icon.Add();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Tray icon: {ex}");
+        }
+
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+}

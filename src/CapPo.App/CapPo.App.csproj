@@ -1,0 +1,96 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    One project, two builds:
+      GitHub build (default): unpackaged and self-contained, free, no license checks. On demand uses a per-user
+        Task Scheduler task; launch at login uses the HKCU Run key.
+          dotnet publish src/CapPo.App -c Release -p:Platform=x64
+      Store build: -p:StoreBuild=true. MSIX; defines STORE_BUILD, which compiles in the Store license and trial check,
+        the NetworkStateChange background task, and the package's startup task.
+          dotnet build src/CapPo.App -c Release -p:Platform=x64 -p:StoreBuild=true
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>CapPo.App</RootNamespace>
+    <AssemblyName>CapPo</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon Condition="Exists('Assets\AppIcon.ico')">Assets\AppIcon.ico</ApplicationIcon>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <!-- From -p:Platform when given (x64, ARM64, x86); otherwise this PC's. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' != '' and '$(Platform)' != 'AnyCPU'">win-$(Platform.ToLowerInvariant())</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
+    <!-- .NET comes with CapPo in both builds: MSIX doesn't install it either. -->
+    <SelfContained>true</SelfContained>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <!-- Program.cs has its own Main: one-shot checks, single instance, and the background task's COM server. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- Source-generated P/Invoke and COM (tray icon, background task). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Both builds: it also makes the app's resources.pri (compiled XAML), which the unpackaged build needs too. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <StoreBuild Condition="'$(StoreBuild)' == ''">false</StoreBuild>
+  </PropertyGroup>
+
+  <!-- CapPoSimulation=true: the simulated portal option works in a release build too, for trying a trimmed build. -->
+  <PropertyGroup Condition="'$(CapPoSimulation)' == 'true'">
+    <DefineConstants>$(DefineConstants);SIMULATION</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(StoreBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);STORE_BUILD</DefineConstants>
+    <!-- Registers the Windows App SDK's UniversalBGTask class in the package, which runs NetworkCheckTask. -->
+    <WindowsAppSDKBackgroundTask>true</WindowsAppSDKBackgroundTask>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(StoreBuild)' != 'true'">
+    <WindowsPackageType>None</WindowsPackageType>
+    <!-- Carries the Windows App SDK with it, so the download needs nothing else installed. The Store build gets it
+         as a framework package instead. -->
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
+  <!-- As Firmly's release builds: smaller, and quicker to start (which a one-shot check run does often). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StoreBuild)' == 'true'">
+    <Content Include="Assets\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StoreBuild)' != 'true'">
+    <None Remove="Package.appxmanifest" />
+    <AppxManifest Remove="Package.appxmanifest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CapPo.Core\CapPo.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <!-- As in Firmly: WinUI and the runtime, not the whole Microsoft.WindowsAppSDK with Windows ML and AI. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.InteractiveExperiences" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StoreBuild)' == 'true'">
+    <!-- dotnet run with package identity. -->
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" />
+  </ItemGroup>
+</Project>

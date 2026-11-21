@@ -58,12 +58,18 @@ public sealed class PortalMonitor : IAsyncDisposable
         Last = first;
         _settleUntil = DateTimeOffset.Now + SettleTime;
         if (watchNetwork)
-        {
-            NetworkChange.NetworkAddressChanged += OnNetworkChanged;
-            NetworkChange.NetworkAvailabilityChanged += OnNetworkChanged;
-            _watching = true;
-        }
+            WatchNetwork();
         _loop = RunAsync(skipFirst: first is not null);
+    }
+
+    /// <summary>From now on, network changes trigger a check too (e.g. once a one-shot run becomes the tray app).</summary>
+    public void WatchNetwork()
+    {
+        if (_watching)
+            return;
+        NetworkChange.NetworkAddressChanged += OnNetworkChanged;
+        NetworkChange.NetworkAvailabilityChanged += OnNetworkChanged;
+        _watching = true;
     }
 
     /// <summary>Checks as soon as possible; the result arrives through the events.</summary>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="CapPo.App.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <StackPanel MaxWidth="760" Padding="32,8,32,32" Spacing="4">
+            <TextBlock Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+
+            <!-- What CapPo sees now. -->
+            <Grid Style="{StaticResource CardStyle}" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon x:Name="StatusIcon" VerticalAlignment="Center" FontSize="24" Glyph="&#xE701;" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Name="StatusDetail" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="SignInButton" Click="OnSignIn" Content="Sign in" Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed" />
+                    <Button Click="OnCheckNow" Content="Check now" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Store build only: the trial. Shown here, never as a reminder anywhere else. -->
+            <InfoBar x:Name="LicenseBar" IsClosable="False">
+                <InfoBar.ActionButton>
+                    <Button Click="OnBuy" Content="Buy CapPo" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <InfoBar x:Name="ProblemBar" IsClosable="False" Severity="Error" Title="Windows didn't accept the change" />
+
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="How CapPo runs" />
+            <Grid Style="{StaticResource CardStyle}">
+                <RadioButtons x:Name="ModeButtons" SelectionChanged="OnModeChanged">
+                    <RadioButton>
+                        <StackPanel>
+                            <TextBlock Text="Always running" />
+                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Stays in the notification area and notices network changes at once." />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton>
+                        <StackPanel>
+                            <TextBlock Text="On demand" />
+                            <TextBlock x:Name="OnDemandDescription" Style="{StaticResource SecondaryTextStyle}" />
+                        </StackPanel>
+                    </RadioButton>
+                </RadioButtons>
+            </Grid>
+            <InfoBar x:Name="ModeBar" IsClosable="False" Severity="Informational" />
+
+            <Grid Style="{StaticResource CardStyle}" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Launch at login" />
+                    <TextBlock x:Name="LaunchAtLoginDetail" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
+                <ToggleSwitch x:Name="LaunchAtLoginSwitch" Grid.Column="1" MinWidth="0" Toggled="OnLaunchAtLoginToggled" />
+            </Grid>
+
+            <Grid Style="{StaticResource CardStyle}" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Re-check interval" />
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="How often to check again while online, for portals that capture you again when a session runs out." />
+                </StackPanel>
+                <ComboBox x:Name="RecheckBox" Grid.Column="1" VerticalAlignment="Center" SelectionChanged="OnRecheckChanged" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
