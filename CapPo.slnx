@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/CapPo.Core/CapPo.Core.csproj" />
+    <Project Path="src/CapPo.Poc/CapPo.Poc.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CapPo.Core.Tests/CapPo.Core.Tests.csproj" />
+  </Folder>
+</Solution>
