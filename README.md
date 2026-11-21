@@ -6,6 +6,21 @@ You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare)
 
 CapPo does that dance for you, without touching your settings. It notices the sign-in page, opens it in its own window, and closes the window once you're online.
 
+## Do you need it?
+
+Only if encrypted DNS is required on **every** network, including ones you haven't joined yet. Windows 11 keeps DNS settings per Wi-Fi network, so where you set it decides whether you need CapPo:
+
+| Where encrypted DNS is set | On a new hotel network | CapPo |
+|---|---|---|
+| For all Wi-Fi networks (Settings > Network & internet > Wi-Fi > Hardware properties), unencrypted fallback off | Encrypted DNS is blocked, and the sign-in page never loads | **Needed** |
+| By policy, "Require DoH" (Group Policy or Intune) | Same | **Needed** |
+| Only for your home network | Windows uses the network's plain DNS, so the sign-in page loads, but nothing you look up there is encrypted | Not needed |
+| Any network, with unencrypted fallback allowed | Windows quietly falls back to plain DNS when encrypted DNS fails, so the page loads, and anyone who can block encrypted DNS can switch you to plain DNS | Not needed |
+
+So CapPo is for people who want encrypted DNS everywhere, with no exceptions. Apps that take over DNS themselves (VPNs, DNS filtering apps) have their own ways around portals; CapPo is for Windows' built-in encrypted DNS.
+
+When CapPo opens the sign-in window, Windows may open its own browser at the portal too. That one can't load the page, because it uses your encrypted DNS; close it. CapPo's window stays on top until you click it.
+
 ## How it works
 
 - **The network's DNS, inside the sign-in window only.** CapPo reads the DNS servers the network handed out (DHCP) and runs a small proxy on your PC (127.0.0.1) that looks names up with them. Only CapPo's sign-in window uses that proxy. Everything else keeps using your encrypted DNS.
