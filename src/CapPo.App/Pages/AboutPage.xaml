@@ -6,7 +6,7 @@
     <ScrollViewer>
         <StackPanel MaxWidth="760" Padding="32,8,32,32" Spacing="4">
             <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Spacing="16">
-                <Image Width="48" Height="48" Source="ms-appx:///Assets/AppIcon.ico" />
+                <Image x:Name="Logo" Width="48" Height="48" />
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="CapPo" />
                     <TextBlock x:Name="VersionText" Style="{StaticResource SecondaryTextStyle}" IsTextSelectionEnabled="True" />
@@ -16,7 +16,7 @@
             <Grid Style="{StaticResource CardStyle}">
                 <StackPanel Spacing="8">
                     <TextBlock TextWrapping="Wrap" Text="CapPo lets you keep encrypted DNS on (DNS over HTTPS, with no fallback to plain DNS) and still sign in to hotel, library and café Wi-Fi." />
-                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Those networks' sign-in pages only appear through the network's own DNS. CapPo uses it inside its sign-in window only, through a small proxy on this PC. Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Text="Those networks' sign-in pages only load through the network's own DNS. CapPo's sign-in window is the only thing that uses it: the window's browser sends its requests through CapPo itself (a proxy inside CapPo, reachable only from this PC), which looks names up with the network's DNS. Nothing else goes through CapPo, Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
                 </StackPanel>
             </Grid>
 
