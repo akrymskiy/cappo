@@ -30,8 +30,30 @@ public sealed partial class PortalWindow : Window
         AppWindow.SetIcon("Assets/AppIcon.ico");
         Size(1000, 780);
         Update(result);
+        Activated += OnActivated;
         Closed += (_, _) => Web.Close();
         _ = StartAsync();
+    }
+
+    /// <summary>
+    /// Shows the window above all others, and keeps it there until the user clicks it. Windows won't let a background
+    /// app take the foreground, so Activate alone leaves it behind whatever the user is in; and the browser Windows
+    /// opens for the portal a moment later would cover it again. Being on top without focus also leaves the user's
+    /// typing where it was.
+    /// </summary>
+    internal void Present()
+    {
+        Activate();
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+            presenter.IsAlwaysOnTop = true;
+    }
+
+    // Clicked: the user has found it, so it goes back to being an ordinary window.
+    private void OnActivated(object sender, WindowActivatedEventArgs e)
+    {
+        if (e.WindowActivationState == WindowActivationState.PointerActivated
+            && AppWindow.Presenter is OverlappedPresenter { IsAlwaysOnTop: true } presenter)
+            presenter.IsAlwaysOnTop = false;
     }
 
     /// <summary>Whether CapPo closed it (signed in), rather than the user.</summary>

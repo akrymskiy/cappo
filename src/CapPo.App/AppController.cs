@@ -155,7 +155,7 @@ internal sealed class AppController
                 ExitIfDone();
             };
         }
-        _portal.Activate();
+        _portal.Present();
     }
 
     public void CheckNow(bool reportResult)
