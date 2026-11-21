@@ -1,3 +1,4 @@
+using CapPo.App.Tray;
 using CapPo.Core.Detection;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -18,6 +19,7 @@ public sealed partial class PortalWindow : Window
     private readonly int _proxyPort;
     private Uri _signInUrl;
     private bool _closingForGood;
+    private bool _clicked;
 
     internal PortalWindow(int proxyPort, DetectionResult result)
     {
@@ -43,17 +45,116 @@ public sealed partial class PortalWindow : Window
     /// </summary>
     internal void Present()
     {
+        _clicked = false;
         Activate();
+        BringIntoView();
+        Log.Info($"Sign-in window shown: {Placement()}");
+        if (NativeMethods.GetForegroundWindow() != Handle)
+            Flash();
+        _ = CheckShownAsync();
+    }
+
+    // Once, opened at login, the window was shown yet not to be seen until opened again from the tray. This records
+    // where it was, and brings it into view again.
+    private async Task CheckShownAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(3));
+        if (_closingForGood || _clicked)
+            return;
+        Log.Info($"Sign-in window 3 s later: {Placement()}");
+        if (!InView())
+        {
+            BringIntoView();
+            Log.Info($"Sign-in window shown again: {Placement()}");
+        }
+    }
+
+    // Restored, on top, and on the virtual desktop the user is looking at.
+    private void BringIntoView()
+    {
+        if (VirtualDesktop.IsOnCurrentDesktop(Handle) == false)
+            VirtualDesktop.MoveTo(Handle, NativeMethods.GetForegroundWindow());
+        AppWindow.Show(activateWindow: false);
         if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            if (presenter.State == OverlappedPresenterState.Minimized)
+                presenter.Restore();
             presenter.IsAlwaysOnTop = true;
+        }
+    }
+
+    private bool InView() =>
+        NativeMethods.IsWindowVisible(Handle) && !NativeMethods.IsIconic(Handle) && Cloaked() == 0
+        && (NativeMethods.GetWindowLongPtr(Handle, NativeMethods.GWL_EXSTYLE) & NativeMethods.WS_EX_TOPMOST) != 0
+        && VirtualDesktop.IsOnCurrentDesktop(Handle) != false;
+
+    // Non-zero when DWM hides the window though it's shown: 1 by the app, 2 by the shell (another virtual desktop), 4 by its owner.
+    private unsafe int Cloaked()
+    {
+        int cloaked;
+        return NativeMethods.DwmGetWindowAttribute(Handle, NativeMethods.DWMWA_CLOAKED, &cloaked, sizeof(int)) == 0 ? cloaked : 0;
     }
 
     // Clicked: the user has found it, so it goes back to being an ordinary window.
     private void OnActivated(object sender, WindowActivatedEventArgs e)
     {
-        if (e.WindowActivationState == WindowActivationState.PointerActivated
-            && AppWindow.Presenter is OverlappedPresenter { IsAlwaysOnTop: true } presenter)
+        if (e.WindowActivationState != WindowActivationState.PointerActivated)
+            return;
+        _clicked = true;
+        if (AppWindow.Presenter is OverlappedPresenter { IsAlwaysOnTop: true } presenter)
             presenter.IsAlwaysOnTop = false;
+    }
+
+    private nint Handle => WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+    // The taskbar button flashes until the window comes to the foreground.
+    private unsafe void Flash()
+    {
+        var info = new NativeMethods.FLASHWINFO
+        {
+            cbSize = (uint)sizeof(NativeMethods.FLASHWINFO),
+            hwnd = Handle,
+            dwFlags = NativeMethods.FLASHW_TRAY | NativeMethods.FLASHW_TIMERNOFG,
+        };
+        NativeMethods.FlashWindowEx(&info);
+    }
+
+    private unsafe string Placement()
+    {
+        var hwnd = Handle;
+        var states = new List<string> { NativeMethods.IsWindowVisible(hwnd) ? "visible" : "hidden" };
+        if (NativeMethods.IsIconic(hwnd))
+            states.Add("minimized");
+        if ((NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE) & NativeMethods.WS_EX_TOPMOST) != 0)
+            states.Add("on top");
+        if (Cloaked() is var cloaked and not 0)
+            states.Add($"cloaked ({cloaked})");
+        states.Add(VirtualDesktop.IsOnCurrentDesktop(hwnd) switch
+        {
+            true => "on this desktop",
+            false => "on another desktop",
+            null => "desktop unknown",
+        });
+        var at = AppWindow.Position;
+        var size = AppWindow.Size;
+        var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
+
+        var foreground = NativeMethods.GetForegroundWindow();
+        NativeMethods.GetWindowThreadProcessId(foreground, out var pid);
+        var title = stackalloc char[100];
+        var length = NativeMethods.GetWindowText(foreground, title, 100);
+        string process;
+        try
+        {
+            using var p = System.Diagnostics.Process.GetProcessById((int)pid);
+            process = p.ProcessName;
+        }
+        catch (ArgumentException)
+        {
+            process = "?";
+        }
+        return $"{string.Join(", ", states)}, at {at.X},{at.Y} {size.Width}×{size.Height} on screen {area.X},{area.Y} "
+            + $"{area.Width}×{area.Height}; foreground {(foreground == hwnd ? "this window" : $"{process} \"{new string(title, 0, length)}\"")}";
     }
 
     /// <summary>Whether CapPo closed it (signed in), rather than the user.</summary>
@@ -160,7 +261,7 @@ public sealed partial class PortalWindow : Window
 
     private void Size(int width, int height)
     {
-        var scale = Tray.NativeMethods.GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
+        var scale = NativeMethods.GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
         var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
         var w = Math.Min((int)(width * scale), area.Width);
         var h = Math.Min((int)(height * scale), area.Height);

@@ -128,6 +128,45 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForWindow(nint hwnd);
 
+    [LibraryImport("user32.dll")]
+    public static partial nint GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetWindowThreadProcessId(nint hwnd, out uint processId);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowTextW")]
+    public static partial int GetWindowText(nint hwnd, char* text, int max);
+
+    public const int GWL_EXSTYLE = -20;
+    public const nint WS_EX_TOPMOST = 0x8;
+
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    public static partial nint GetWindowLongPtr(nint hwnd, int index);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsWindowVisible(nint hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsIconic(nint hwnd);
+
+    public const uint FLASHW_TRAY = 0x2, FLASHW_TIMERNOFG = 0xC;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FLASHWINFO
+    {
+        public uint cbSize;
+        public nint hwnd;
+        public uint dwFlags;
+        public uint uCount;
+        public uint dwTimeout;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool FlashWindowEx(FLASHWINFO* info);
+
     [LibraryImport("gdi32.dll")]
     public static partial nint CreateBitmap(int width, int height, uint planes, uint bitsPerPixel, void* bits);
 
@@ -174,6 +213,7 @@ internal static unsafe partial class NativeMethods
     public static partial bool GetWindowRect(nint hwnd, RECT* rect);
 
     public const uint DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+    public const uint DWMWA_CLOAKED = 14;
 
     /// <returns>An HRESULT.</returns>
     [LibraryImport("dwmapi.dll")]
