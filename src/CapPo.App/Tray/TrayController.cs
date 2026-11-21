@@ -56,7 +56,8 @@ internal sealed unsafe class TrayController : IDisposable
         {
             NetworkState.Online => TrayGlyph.Online,
             NetworkState.Portal => TrayGlyph.Portal,
-            NetworkState.Unreachable or NetworkState.NoNetwork => TrayGlyph.Offline,
+            NetworkState.Unreachable => TrayGlyph.Offline,
+            NetworkState.NoNetwork => TrayGlyph.Disconnected,
             _ => TrayGlyph.Idle,
         };
 

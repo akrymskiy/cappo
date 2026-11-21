@@ -6,8 +6,10 @@ internal enum TrayGlyph
     Online,
     /// <summary>A portal wants a sign-in: an amber badge with "!".</summary>
     Portal,
-    /// <summary>Connected but no internet, or not connected: outer arcs faded.</summary>
+    /// <summary>Connected but no internet: outer arcs faded.</summary>
     Offline,
+    /// <summary>Not connected to any network: all faded, with a cross.</summary>
+    Disconnected,
     /// <summary>Not checked yet, or a Store trial has ended: all faded.</summary>
     Idle,
 }
@@ -36,6 +38,7 @@ internal static class TrayIconRenderer
         var amber = lightTaskbar ? 0xFFB86E00u : 0xFFFFC233u;
         var mark = 0xFF1A1A1Au;
         var badge = glyph == TrayGlyph.Portal;
+        var cross = glyph == TrayGlyph.Disconnected;
 
         var pixels = new uint[size * size];
         var scale = 16.0 / size;
@@ -61,12 +64,19 @@ internal static class TrayIconRenderer
                         }
                         if (badge && InCircle(x, y, BadgeX, BadgeY, BadgeRadius + Halo))
                             continue;
+                        if (cross && InCross(x, y))
+                        {
+                            arcs++;
+                            continue;
+                        }
+                        if (cross && InCross(x, y, Halo))
+                            continue;
 
                         var part = WifiPart(x, y);
                         if (part < 0)
                             continue;
-                        // Offline keeps the dot and the inner arc; Idle fades everything.
-                        var dim = glyph == TrayGlyph.Idle || (glyph == TrayGlyph.Offline && part >= 2);
+                        // Offline keeps the dot and the inner arc; Idle and Disconnected fade everything.
+                        var dim = glyph is TrayGlyph.Idle or TrayGlyph.Disconnected || (glyph == TrayGlyph.Offline && part >= 2);
                         if (dim)
                             faded++;
                         else
@@ -106,6 +116,18 @@ internal static class TrayIconRenderer
     private static bool InExclamation(double x, double y) =>
         (Math.Abs(x - BadgeX) <= 0.6 && y >= BadgeY - 2.3 && y <= BadgeY + 0.5)
         || InCircle(x, y, BadgeX, BadgeY + 1.65, 0.65);
+
+    // An × in the badge's place: two strokes along the diagonals, widened by margin for the cleared ring.
+    private static bool InCross(double x, double y, double margin = 0)
+    {
+        const double Arm = 2.6, HalfWidth = 0.8;
+        var dx = x - BadgeX;
+        var dy = y - BadgeY;
+        var reach = Arm + margin;
+        var width = (HalfWidth + margin) * Math.Sqrt(2);
+        return Math.Abs(dx) <= reach && Math.Abs(dy) <= reach
+            && (Math.Abs(dx - dy) <= width || Math.Abs(dx + dy) <= width);
+    }
 
     private static bool InCircle(double x, double y, double cx, double cy, double radius) =>
         ((x - cx) * (x - cx)) + ((y - cy) * (y - cy)) <= radius * radius;
