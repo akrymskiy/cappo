@@ -44,7 +44,7 @@ CapPo runs in one of two modes (Settings):
 
 Both versions are built from this code and work the same way. The Store version is how you can support development if you like it. The GitHub version has no license checks, reminders or limits.
 
-**GitHub version:** download the zip for your PC (x64 or ARM64) from [Releases](https://github.com/akrymskiy/cappo/releases), unzip it anywhere, and run `CapPo.exe`. Before deleting the folder, run `CapPo.exe --unregister` to remove its startup entry and scheduled task. CapPo's settings and log are in `%LocalAppData%\CapPo`.
+**GitHub version:** download the zip for your PC (x64 or ARM64) from [Releases](https://github.com/akrymskiy/cappo/releases), unzip it anywhere, and run `CapPo.exe`. It adds itself to the Start menu. Before deleting the folder, run `CapPo.exe --unregister` to remove its Start menu shortcut, startup entry and scheduled task. CapPo's settings and log are in `%LocalAppData%\CapPo`.
 
 Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in window needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11.
 

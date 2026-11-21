@@ -30,6 +30,9 @@ public sealed class AppSettings
     /// </summary>
     public int RecheckMinutes { get; set; } = 20;
 
+    /// <summary>GitHub build: CapPo has made its Start menu shortcut, so one missing now was deleted by the user.</summary>
+    public bool StartMenuShortcutMade { get; set; }
+
     [JsonIgnore]
     public TimeSpan RecheckInterval => TimeSpan.FromMinutes(Math.Max(RecheckMinutes, RecheckChoices[0]));
 

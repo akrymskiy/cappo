@@ -1,6 +1,9 @@
 namespace CapPo.App.RunModes;
 
-/// <summary>Makes Windows' registrations match the chosen mode. Safe to repeat; done at every start.</summary>
+/// <summary>
+/// Makes Windows' registrations match the chosen mode, and (GitHub build) keeps the Start menu shortcut. Safe to
+/// repeat; done at every start.
+/// </summary>
 internal static class RunModeSetup
 {
     /// <returns>Null when done, or what went wrong, to show in Settings.</returns>
@@ -31,6 +34,17 @@ internal static class RunModeSetup
                 ? $"Windows wouldn't set up On demand mode: {ex.Message}"
                 : $"Couldn't remove On demand mode's trigger: {ex.Message}");
         }
+#if !STORE_BUILD
+        try
+        {
+            StartMenuShortcut.Apply(settings);
+        }
+        catch (Exception ex)
+        {
+            // Not worth bothering the user about: CapPo still works, and can be started from its folder.
+            Log.Error(ex, "Couldn't add CapPo to the Start menu");
+        }
+#endif
         return problems.Count == 0 ? null : string.Join("\n", problems);
     }
 
@@ -39,5 +53,8 @@ internal static class RunModeSetup
     {
         await LaunchAtLogin.SetAsync(false);
         await OnDemandTrigger.UnregisterAsync();
+#if !STORE_BUILD
+        StartMenuShortcut.Remove();
+#endif
     }
 }
