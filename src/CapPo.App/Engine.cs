@@ -44,8 +44,12 @@ internal sealed class Engine : IAsyncDisposable
             return "the network";
         try
         {
+            // Every saved Wi-Fi profile is listed against the adapter, connected or not; only the connected one has a
+            // connectivity level (behind a portal it's LocalAccess or ConstrainedInternetAccess, not None).
             if (Guid.TryParse(network.AdapterId, out var adapter)
-                && NetworkInformation.GetConnectionProfiles().FirstOrDefault(p => p.NetworkAdapter?.NetworkAdapterId == adapter) is { } profile
+                && NetworkInformation.GetConnectionProfiles().FirstOrDefault(p =>
+                    p.NetworkAdapter?.NetworkAdapterId == adapter
+                    && p.GetNetworkConnectivityLevel() != NetworkConnectivityLevel.None) is { } profile
                 && !string.IsNullOrWhiteSpace(profile.ProfileName))
                 return profile.ProfileName;
         }
