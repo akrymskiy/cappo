@@ -42,11 +42,14 @@ CapPo runs in one of two modes (Settings):
 | Price | Paid, with a free trial | Free |
 | Updates | Automatic | Manual |
 | On demand mode uses | A background task | A Task Scheduler task (per user) |
+| Code signed | Yes (by the Store) | No |
 | License | GPL-3.0 | GPL-3.0 |
 
 Both versions are built from this code and work the same way. The Store version is how you can support development if you like it. The GitHub version has no license checks, reminders or limits.
 
 **GitHub version:** download the zip for your PC (x64 or ARM64) from [Releases](https://github.com/akrymskiy/cappo/releases), unzip it anywhere, and run `CapPo.exe`. It adds itself to the Start menu. Before deleting the folder, run `CapPo.exe --unregister` to remove its Start menu shortcut, startup entry and scheduled task. CapPo's settings and log are in `%LocalAppData%\CapPo`.
+
+The GitHub version isn't code-signed, so Windows may warn you the first time you run it: click **More info**, then **Run anyway**. If Smart App Control blocks it (it offers no way past), or you'd rather skip the warning, get the Microsoft Store version: it's signed, updates itself, and supports development.
 
 Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in window needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11.
 
