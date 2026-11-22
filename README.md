@@ -1,5 +1,7 @@
 # CapPo
 
+*Sign-in page? I know a guy.*
+
 **Keep encrypted DNS on, and still sign in to hotel, library and café Wi-Fi.**
 
 You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare), with fallback to plain DNS turned off. Then you join hotel Wi-Fi, and the sign-in page never appears: the network blocks encrypted DNS until you sign in, and you can't sign in without its DNS. The usual fix is to turn encrypted DNS off, sign in, and remember to turn it back on.
@@ -84,3 +86,5 @@ CapPo has no telemetry or analytics and collects nothing. See [PRIVACY.md](PRIVA
 ## License
 
 [GPL-3.0](LICENSE). Copyright © 2026 Alex Krymskiy.
+
+*Made with love in Brooklyn.*
