@@ -75,16 +75,12 @@ There's a simulated captive portal for trying CapPo without a hotel: in a Debug 
 | `src/CapPo.Poc` | Console proof of concept |
 | `tests/CapPo.Core.Tests` | Tests, including the full sign-in cycle against the simulated portal |
 
-## Name
-
-"CapPo" is this project's name. If you fork it and publish your fork, please give it a different name and icon, so people can tell the two apart.
-
 ## Privacy
 
 CapPo has no telemetry or analytics and collects nothing. See [PRIVACY.md](PRIVACY.md).
 
 ## License
 
-[GPL-3.0](LICENSE). Copyright © 2026 Alex Krymskiy.
+[GPL-3.0](LICENSE). Copyright © 2026 Alex Krymskiy. CapPo and its icon are trademarks of Alex Krymskiy.
 
 *Made with love in Brooklyn.*
