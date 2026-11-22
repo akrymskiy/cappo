@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CapPo: keep encrypted DNS on, and still sign in to Wi-Fi</title>
-  <meta name="description" content="CapPo lets you keep Windows' encrypted DNS on everywhere, with no fallback to plain DNS, because it handles the captive portals (hotel, library and café Wi-Fi sign-in pages) that would otherwise make you turn it off.">
+  <meta name="description" content="CapPo lets you keep Windows' encrypted DNS on everywhere, with no fallback to plain DNS, because it handles the captive portals (airport, hotel, library and café Wi-Fi sign-in pages) that would otherwise make you turn it off.">
   <link rel="icon" href="favicon-light.png" media="(prefers-color-scheme: light)">
   <link rel="icon" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
   <link rel="stylesheet" href="style.css">
@@ -12,7 +12,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./">
+      <a class="brand" translate="no" href="./">
         <img class="logo-light" src="icon-light.png" alt=""><img class="logo-dark" src="icon-dark.png" alt="">CapPo
       </a>
       <nav>
@@ -27,12 +27,12 @@
     <div class="hero">
       <img class="logo-light" src="icon-light.png" alt="CapPo's icon: a fedora over a Wi-Fi signal">
       <img class="logo-dark" src="icon-dark.png" alt="CapPo's icon: a fedora over a Wi-Fi signal">
-      <h1>CapPo</h1>
+      <h1 translate="no">CapPo</h1>
       <p class="opener">Sign-in page? I know a guy.</p>
       <p class="pitch">
         Keep encrypted DNS on, and still sign in to
-        <span class="cp">Cap</span>tive <span class="cp">Po</span>rtals
-        <span class="places">(hotel, library and café Wi-Fi)</span>.
+        <span translate="no"><span class="cp">Cap</span>tive <span class="cp">Po</span>rtals</span>
+        <span class="places">(airport, hotel, library and café Wi-Fi)</span>.
       </p>
       <div class="buttons">
         <a class="button primary" href="https://github.com/akrymskiy/cappo/releases">Download from GitHub</a>
@@ -45,7 +45,7 @@
       <p>
         You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare), with fallback to plain DNS
         turned off. Then you join hotel Wi-Fi, and the sign-in page never appears: the network blocks encrypted DNS
-        until you sign in, and you can't sign in without its DNS. Without <span class="cp">CapPo</span>, you're left with three choices, and
+        until you sign in, and you can't sign in without its DNS. Without <span class="cp" translate="no">CapPo</span>, you're left with three choices, and
         each one weakens the protection:
       </p>
       <ul class="choices">
@@ -54,7 +54,7 @@
         <li><strong>Keep exceptions by hand.</strong> Turn it off, sign in, and remember to turn it back on. Every time.</li>
       </ul>
       <p>
-        CapPo doesn't encrypt anything itself: Windows does. CapPo is the reason you can leave it on. It notices the
+        <span translate="no">CapPo</span> doesn't encrypt anything itself: Windows does. <span translate="no">CapPo</span> is the reason you can leave it on. It notices the
         sign-in page, opens it in its own window, and closes the window once you're online.
       </p>
       <p class="callout">Makes captive portals an offer they can't refuse.</p>
@@ -63,22 +63,22 @@
     <section>
       <h2>How it works</h2>
       <ul class="points">
-        <li><strong>The network's DNS, inside the sign-in window only.</strong> CapPo reads the DNS servers the network
-          handed out (DHCP) and runs a small proxy on your PC (127.0.0.1) that looks names up with them. Only CapPo's
+        <li><strong>The network's DNS, inside the sign-in window only.</strong> <span translate="no">CapPo</span> reads the DNS servers the network
+          handed out (DHCP) and runs a small proxy on your PC (127.0.0.1) that looks names up with them. Only <span translate="no">CapPo</span>'s
           sign-in window uses that proxy. Everything else keeps using your encrypted DNS.</li>
-        <li><strong>Your system DNS is never touched.</strong> CapPo doesn't change Windows' DNS settings, and it needs
+        <li><strong>Your system DNS is never touched.</strong> <span translate="no">CapPo</span> doesn't change Windows' DNS settings, and it needs
           no administrator rights.</li>
-        <li><strong>It checks the way Windows does.</strong> CapPo fetches Microsoft's connectivity test page through its
+        <li><strong>It checks the way Windows does.</strong> <span translate="no">CapPo</span> fetches Microsoft's connectivity test page through its
           proxy. If something else answers, a portal is in the way. It also supports networks that announce their
           portal (<a href="https://www.rfc-editor.org/rfc/rfc8910">RFC 8910</a> /
           <a href="https://www.rfc-editor.org/rfc/rfc8908">RFC 8908</a>).</li>
-        <li><strong>It notices when you're through.</strong> Once you're online, CapPo closes the window and flushes
+        <li><strong>It notices when you're through.</strong> Once you're online, <span translate="no">CapPo</span> closes the window and flushes
           Windows' DNS cache, which still holds the failed lookups from before. Later it checks again, for portals that
           capture you again when a session runs out.</li>
       </ul>
       <h3>Always running, or on demand</h3>
       <p>
-        CapPo can stay in the notification area and react to network changes at once. Or it can stay out of the way:
+        <span translate="no">CapPo</span> can stay in the notification area and react to network changes at once. Or it can stay out of the way:
         Windows starts it when a network connects, for a check that takes about a second, and you only see it when
         there's a sign-in page.
       </p>
@@ -92,7 +92,7 @@
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>Where encrypted DNS is set</th><th>On a new hotel network</th><th>CapPo</th></tr>
+            <tr><th>Where encrypted DNS is set</th><th>On a new hotel network</th><th><span translate="no">CapPo</span></th></tr>
           </thead>
           <tbody>
             <tr><td>For all Wi-Fi networks, unencrypted fallback off</td><td>The sign-in page never loads</td><td><strong>Needed</strong></td></tr>
@@ -103,7 +103,7 @@
         </table>
       </div>
       <p>
-        CapPo is for Windows' built-in encrypted DNS. Apps that take over DNS themselves (VPNs, DNS filtering apps)
+        <span translate="no">CapPo</span> is for Windows' built-in encrypted DNS. Apps that take over DNS themselves (VPNs, DNS filtering apps)
         have their own ways around portals.
       </p>
     </section>
@@ -136,7 +136,7 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <span class="motto">Your DNS is under my protection. Capisce?</span>
+      <span class="motto">Your DNS is under my protection. <span translate="no">Capisce?</span></span>
       <span><a href="support">Support</a> · <a href="privacy">Privacy</a> · <a href="https://github.com/akrymskiy/cappo">Source code</a> · © 2026 Alex Krymskiy · Made with love in Brooklyn</span>
     </div>
   </footer>

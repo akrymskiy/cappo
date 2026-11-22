@@ -12,7 +12,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="./">
+      <a class="brand" translate="no" href="./">
         <img class="logo-light" src="icon-light.png" alt=""><img class="logo-dark" src="icon-dark.png" alt="">CapPo
       </a>
       <nav>
@@ -28,40 +28,40 @@
     <p class="updated">Last updated: 22 November 2026</p>
 
     <p>
-      CapPo does not collect, store or transmit any personal data. It has no telemetry, analytics, crash reporting or
+      <span translate="no">CapPo</span> does not collect, store or transmit any personal data. It has no telemetry, analytics, crash reporting or
       advertising, and it has no accounts.
     </p>
 
-    <h2>What CapPo does on your PC</h2>
+    <h2>What <span translate="no">CapPo</span> does on your PC</h2>
     <ul>
-      <li><strong>Reads your network settings.</strong> CapPo finds your active network connection and the DNS servers
+      <li><strong>Reads your network settings.</strong> <span translate="no">CapPo</span> finds your active network connection and the DNS servers
         that network handed out (DHCP). It never changes Windows' network or DNS settings.</li>
-      <li><strong>Checks for a sign-in page.</strong> CapPo fetches Microsoft's connectivity test page
+      <li><strong>Checks for a sign-in page.</strong> <span translate="no">CapPo</span> fetches Microsoft's connectivity test page
         (<code>http://www.msftconnecttest.com/connecttest.txt</code>), the same page Windows itself uses to check for
         internet access. That request goes to Microsoft, as Windows' own check does. It contains nothing about you
         beyond what any web request does, such as your IP address.</li>
-      <li><strong>Shows the sign-in page.</strong> When a network wants you to sign in, CapPo shows its page in a
-        window. What you type there goes to that network's sign-in page, not to CapPo. The page is loaded through a
+      <li><strong>Shows the sign-in page.</strong> When a network wants you to sign in, <span translate="no">CapPo</span> shows its page in a
+        window. What you type there goes to that network's sign-in page, not to <span translate="no">CapPo</span>. The page is loaded through a
         small proxy that runs on your PC (127.0.0.1) and is only for that window.</li>
-      <li><strong>Keeps a few files on your PC.</strong> Settings, a short log of what CapPo checked (network state,
+      <li><strong>Keeps a few files on your PC.</strong> Settings, a short log of what <span translate="no">CapPo</span> checked (network state,
         adapter names, DNS server addresses, sign-in page hosts), and the sign-in window's browser data (such as cookies
         a sign-in page sets). They stay on your PC:
         <ul>
           <li>GitHub version: <code>%LocalAppData%\CapPo</code></li>
-          <li>Microsoft Store version: CapPo's app data folder, which Windows removes when you uninstall CapPo</li>
+          <li>Microsoft Store version: <span translate="no">CapPo</span>'s app data folder, which Windows removes when you uninstall <span translate="no">CapPo</span></li>
         </ul>
       </li>
     </ul>
     <p>
-      Nothing in these files is ever sent anywhere. If you choose to attach CapPo's log to a problem report, it goes
+      Nothing in these files is ever sent anywhere. If you choose to attach <span translate="no">CapPo</span>'s log to a problem report, it goes
       where you post it, and nowhere else.
     </p>
 
     <h2>Microsoft Store version</h2>
     <p>
-      The Store version asks the Microsoft Store whether you own CapPo or are on a trial. That's handled by Windows and
+      The Store version asks the Microsoft Store whether you own <span translate="no">CapPo</span> or are on a trial. That's handled by Windows and
       the Microsoft Store under <a href="https://privacy.microsoft.com/privacystatement">Microsoft's privacy
-      statement</a>. CapPo receives only the answer.
+      statement</a>. <span translate="no">CapPo</span> receives only the answer.
     </p>
 
     <h2>This website</h2>
@@ -81,7 +81,7 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <span class="motto">Your DNS is under my protection. Capisce?</span>
+      <span class="motto">Your DNS is under my protection. <span translate="no">Capisce?</span></span>
       <span><a href="support">Support</a> · <a href="privacy">Privacy</a> · <a href="https://github.com/akrymskiy/cappo">Source code</a> · © 2026 Alex Krymskiy · Made with love in Brooklyn</span>
     </div>
   </footer>
