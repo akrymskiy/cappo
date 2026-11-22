@@ -46,6 +46,7 @@ public sealed partial class SettingsPage : Page
             _ => "",
         };
         SignInButton.Visibility = last?.State == NetworkState.Portal && Controller.License.IsUsable ? Visibility.Visible : Visibility.Collapsed;
+        RefreshWebView();
 
         var license = Controller.License;
         LicenseBar.IsOpen = AppInfo.IsStoreBuild && (license.IsTrial || !license.IsUsable);
@@ -75,6 +76,12 @@ public sealed partial class SettingsPage : Page
         ModeBar.Message = "CapPo stays open until you exit it. After that, it starts by itself when it's needed.";
         LaunchAtLoginSwitch.IsEnabled = !onDemand;
     }
+
+    /// <summary>Shows or hides the WebView2 warning; the main window calls it again when it comes back to the front.</summary>
+    internal void RefreshWebView() => WebViewBar.IsOpen = !WebViewEnvironment.IsInstalled;
+
+    private async void OnGetWebView(object sender, RoutedEventArgs e) =>
+        await Windows.System.Launcher.LaunchUriAsync(new Uri(WebViewEnvironment.DownloadUrl));
 
     private async Task RefreshLaunchAtLoginAsync()
     {

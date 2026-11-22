@@ -10,9 +10,11 @@ namespace CapPo.App;
 /// <item><c>-RegisterForBGTaskServer</c>: started by COM for the Store build's background task.</item>
 /// <item><c>--simulate-portal[=minutes]</c> (debug builds, or built with -p:CapPoSimulation=true): use the simulated portal, optionally with sessions that
 /// expire, to try the sign-in window without a captive network.</item>
+/// <item><c>--pretend-no-webview2</c> (debug builds): act as if the WebView2 Runtime were missing, to try CapPo's
+/// warnings about it.</item>
 /// </list>
 /// </remarks>
-internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, bool BackgroundTaskServer, TimeSpan? Simulate)
+internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, bool BackgroundTaskServer, TimeSpan? Simulate, bool PretendNoWebView2 = false)
 {
     public bool SimulatePortal => Simulate is not null;
 
@@ -28,7 +30,11 @@ internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, 
                 ? TimeSpan.FromMinutes(m)
                 : Timeout.InfiniteTimeSpan;
 #endif
-        return new(Has("--check"), Has("--startup"), Has("--unregister"), Has("-RegisterForBGTaskServer"), simulate);
+        var pretendNoWebView2 = false;
+#if DEBUG
+        pretendNoWebView2 = Has("--pretend-no-webview2");
+#endif
+        return new(Has("--check"), Has("--startup"), Has("--unregister"), Has("-RegisterForBGTaskServer"), simulate, pretendNoWebView2);
     }
 
     /// <summary>From a launch redirected to the running CapPo: its arguments as one string.</summary>

@@ -110,12 +110,31 @@ internal sealed class AppController
         {
             EnterTrayMode(showWindow: !options.Startup);
             _monitor.Start(watchNetwork: true);
+            if (options.Startup)
+                _ = WarnIfNoWebViewAsync();
 #if !DEBUG
             // Keeps Windows' registrations in step with the settings (and with this exe's path). Not for debug runs,
             // which would point them at a build folder.
             await ApplyRunModeAsync();
 #endif
         }
+    }
+
+    // Started at login, with no window: without the WebView2 Runtime there's no sign-in window, so say so once now,
+    // while the user is likely online and can install it. (A window opened by hand shows it in Settings instead, and
+    // On demand checks stay quiet, or they'd say it at every network change.)
+    private async Task WarnIfNoWebViewAsync()
+    {
+        if (WebViewEnvironment.IsInstalled)
+            return;
+        Log.Info("No WebView2 Runtime");
+        // Give Explorer a moment at login, so the notification isn't lost.
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        _tray?.Notify(
+            "CapPo needs the WebView2 Runtime",
+            "Without it, CapPo can't show sign-in pages. Open CapPo to install it.",
+            warning: true,
+            clicked: () => ShowMainWindow());
     }
 
     /// <summary>Another launch of CapPo was handed to this one.</summary>

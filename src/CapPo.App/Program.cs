@@ -21,6 +21,7 @@ public static class Program
     {
         WinRT.ComWrappersSupport.InitializeComWrappers();
         var options = LaunchOptions.Parse(args);
+        WebViewEnvironment.PretendMissing = options.PretendNoWebView2;
 
 #if STORE_BUILD
         if (options.BackgroundTaskServer)

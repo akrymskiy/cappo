@@ -25,6 +25,18 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Without the WebView2 Runtime there's no sign-in window. Said here, while the user is likely online. -->
+            <InfoBar
+                x:Name="WebViewBar"
+                IsClosable="False"
+                Severity="Warning"
+                Title="The sign-in window needs the Microsoft Edge WebView2 Runtime"
+                Message="It isn't installed on this PC. Install it now, while you're online: without it, CapPo can't show sign-in pages.">
+                <InfoBar.ActionButton>
+                    <Button Click="OnGetWebView" Content="Get it" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
             <!-- Store build only: the trial. Shown here, never as a reminder anywhere else. -->
             <InfoBar x:Name="LicenseBar" IsClosable="False">
                 <InfoBar.ActionButton>

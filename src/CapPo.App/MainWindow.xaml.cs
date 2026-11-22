@@ -27,6 +27,13 @@ public sealed partial class MainWindow : Window
         var width = Math.Min((int)(OpenWidth * scale), area.Width);
         var height = Math.Min((int)(OpenHeight * scale), area.Height);
         AppWindow.MoveAndResize(new RectInt32(area.X + ((area.Width - width) / 2), area.Y + ((area.Height - height) / 2), width, height));
+
+        // Back from installing the WebView2 Runtime, say: Settings drops its warning without a restart.
+        Activated += (_, e) =>
+        {
+            if (e.WindowActivationState != WindowActivationState.Deactivated && RootFrame.Content is SettingsPage settings)
+                settings.RefreshWebView();
+        };
     }
 
     public nint Handle => WinRT.Interop.WindowNative.GetWindowHandle(this);

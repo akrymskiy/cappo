@@ -14,7 +14,7 @@ internal static unsafe partial class NativeMethods
     public const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2, NIM_SETVERSION = 4;
     public const uint NIF_MESSAGE = 0x01, NIF_ICON = 0x02, NIF_TIP = 0x04, NIF_INFO = 0x10, NIF_SHOWTIP = 0x80;
     public const uint NOTIFYICON_VERSION_4 = 4;
-    public const uint NIN_SELECT = WM_USER, NIN_KEYSELECT = WM_USER + 1;
+    public const uint NIN_SELECT = WM_USER, NIN_KEYSELECT = WM_USER + 1, NIN_BALLOONUSERCLICK = WM_USER + 5;
     public const uint NIIF_NONE = 0, NIIF_WARNING = 2;
 
     public const uint MF_STRING = 0x0000, MF_GRAYED = 0x0001, MF_CHECKED = 0x0008, MF_SEPARATOR = 0x0800;

@@ -198,9 +198,11 @@ public sealed partial class PortalWindow : Window
 
     private async Task StartAsync()
     {
-        if (WebViewEnvironment.RuntimeVersion is null)
+        if (!WebViewEnvironment.IsInstalled)
         {
-            ShowError("The sign-in window needs the Microsoft Edge WebView2 Runtime, which isn't installed. Get it from https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+            Log.Info("No WebView2 Runtime: the sign-in page can't be shown");
+            ShowError("This window needs the Microsoft Edge WebView2 Runtime, which isn't installed, so it can't show the "
+                + $"sign-in page. Once you're online, install it from {WebViewEnvironment.DownloadUrl}");
             return;
         }
         try

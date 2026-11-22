@@ -57,6 +57,9 @@ internal sealed unsafe class TrayIcon : IDisposable
     /// <summary>Right-clicked, or the menu key pressed; the menu should open at the given screen point.</summary>
     public event Action<int, int>? MenuRequested;
 
+    /// <summary>The notification from <see cref="Notify"/> was clicked.</summary>
+    public event Action? NotificationClicked;
+
     /// <summary>Windows switched between light and dark, so the icon may need redrawing.</summary>
     public event Action? ThemeChanged;
 
@@ -195,6 +198,9 @@ internal sealed unsafe class TrayIcon : IDisposable
                             break;
                         case WM_CONTEXTMENU:
                             icon.MenuRequested?.Invoke(anchorX, anchorY);
+                            break;
+                        case NIN_BALLOONUSERCLICK:
+                            icon.NotificationClicked?.Invoke();
                             break;
                     }
                     return 0;

@@ -16,6 +16,8 @@ internal sealed unsafe class TrayController : IDisposable
     private readonly TrayIcon _icon = new();
     private nint _iconHandle;
     private (TrayGlyph Glyph, int Size, bool Light)? _drawn;
+    // What clicking the last notification does; nothing for most of them.
+    private Action? _notificationClicked;
 
     public TrayController(AppController app)
     {
@@ -24,6 +26,7 @@ internal sealed unsafe class TrayController : IDisposable
         _icon.Selected += (_, _) => App.Dispatcher.TryEnqueue(OnSelected);
         _icon.MenuRequested += OnMenuRequested;
         _icon.ThemeChanged += Update;
+        _icon.NotificationClicked += () => App.Dispatcher.TryEnqueue(() => _notificationClicked?.Invoke());
         Update();
     }
 
@@ -33,7 +36,12 @@ internal sealed unsafe class TrayController : IDisposable
         DestroyIcon(_iconHandle);
     }
 
-    public void Notify(string title, string text, bool warning = false) => _icon.Notify(title, text, warning);
+    /// <param name="clicked">What clicking the notification does, if anything.</param>
+    public void Notify(string title, string text, bool warning = false, Action? clicked = null)
+    {
+        _notificationClicked = clicked;
+        _icon.Notify(title, text, warning);
+    }
 
     public void Update()
     {

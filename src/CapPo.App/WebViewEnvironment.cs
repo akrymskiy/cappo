@@ -21,18 +21,29 @@ internal static class WebViewEnvironment
         return s_environment;
     }
 
-    /// <summary>Whether the WebView2 runtime is installed (it comes with Windows 11, and Edge on Windows 10).</summary>
-    public static string? RuntimeVersion
+    /// <summary>Microsoft's installer for the WebView2 Runtime (the Evergreen bootstrapper, a small download).</summary>
+    public const string DownloadUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703";
+
+    /// <summary>Debug builds' --pretend-no-webview2: act as if the runtime were missing, to try what CapPo says then.</summary>
+    public static bool PretendMissing { get; set; }
+
+    /// <summary>
+    /// Whether the WebView2 Runtime is installed. It comes with Windows 11 and is on most Windows 10 PCs. Checked again
+    /// on every call, so installing it while CapPo runs is noticed.
+    /// </summary>
+    public static bool IsInstalled
     {
         get
         {
+            if (PretendMissing)
+                return false;
             try
             {
-                return CoreWebView2Environment.GetAvailableBrowserVersionString();
+                return CoreWebView2Environment.GetAvailableBrowserVersionString() is { Length: > 0 };
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
     }
