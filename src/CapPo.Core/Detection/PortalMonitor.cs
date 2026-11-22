@@ -75,6 +75,18 @@ public sealed class PortalMonitor : IAsyncDisposable
     /// <summary>Checks as soon as possible; the result arrives through the events.</summary>
     public void CheckNow() => _wake.Release();
 
+    /// <summary>A check is running; its result arrives through <see cref="Checked"/>.</summary>
+    public bool IsChecking { get; private set; }
+
+    /// <summary>A check started or ended (<see cref="IsChecking"/>). Raised on the monitor's thread.</summary>
+    public event Action? CheckingChanged;
+
+    /// <summary>
+    /// Something outside the adapters changed, e.g. Windows' own connectivity check now says no internet: a VPN's
+    /// tunnel losing its way out changes no address. Checked like a network change.
+    /// </summary>
+    public void NetworkMayHaveChanged() => OnNetworkChanged(null, EventArgs.Empty);
+
     private void OnNetworkChanged(object? sender, EventArgs e) =>
         // Address changes come in bursts (IPv4, IPv6, each adapter); act once they stop.
         _debounce.Change(NetworkChangeDebounce, Timeout.InfiniteTimeSpan);
@@ -93,9 +105,13 @@ public sealed class PortalMonitor : IAsyncDisposable
         {
             if (!skip)
             {
+                IsChecking = true;
+                CheckingChanged?.Invoke();
                 try
                 {
-                    Publish(await _detector.CheckAsync(_stop.Token).ConfigureAwait(false));
+                    var result = await _detector.CheckAsync(_stop.Token).ConfigureAwait(false);
+                    IsChecking = false;
+                    Publish(result);
                 }
                 catch (OperationCanceledException)
                 {
@@ -104,6 +120,11 @@ public sealed class PortalMonitor : IAsyncDisposable
                 catch (Exception ex)
                 {
                     _log.LogError(ex, "Check failed");
+                }
+                finally
+                {
+                    IsChecking = false;
+                    CheckingChanged?.Invoke();
                 }
             }
             skip = false;

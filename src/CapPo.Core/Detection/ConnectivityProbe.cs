@@ -41,6 +41,8 @@ public sealed class ConnectivityProbe : IDisposable
     private const int MaxBodyBytes = 64 * 1024;
 
     private readonly HttpClient _http;
+    // Without the proxy: Windows' own DNS and routes, so through a VPN when one carries the traffic.
+    private readonly HttpClient _direct;
 
     /// <param name="url">Null: <see cref="ProbeUrl"/>.</param>
     /// <param name="addressUrl">Null: <see cref="AddressProbeUrl"/>.</param>
@@ -48,22 +50,31 @@ public sealed class ConnectivityProbe : IDisposable
     {
         Url = url ?? ProbeUrl;
         AddressUrl = addressUrl ?? AddressProbeUrl;
-        _http = new HttpClient(new SocketsHttpHandler
+        _http = NewClient(new WebProxy(proxy) { BypassProxyOnLocal = false }, timeout);
+        _direct = NewClient(null, timeout);
+    }
+
+    private static HttpClient NewClient(WebProxy? proxy, TimeSpan timeout)
+    {
+        var http = new HttpClient(new SocketsHttpHandler
         {
-            Proxy = new WebProxy(proxy) { BypassProxyOnLocal = false },
-            UseProxy = true,
+            Proxy = proxy,
+            UseProxy = proxy is not null,
             // A redirect is the portal's answer; following it would hide that.
             AllowAutoRedirect = false,
             UseCookies = false,
             AutomaticDecompression = DecompressionMethods.None,
+            // One request per check: no connection kept to land on the wrong network next time.
+            PooledConnectionLifetime = TimeSpan.Zero,
         }, disposeHandler: true)
         {
             Timeout = timeout,
         };
         // As Windows' own check sends it: some portals only redirect clients that look like one.
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd("Microsoft NCSI");
-        _http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
-        _http.DefaultRequestHeaders.Pragma.ParseAdd("no-cache");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("Microsoft NCSI");
+        http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
+        http.DefaultRequestHeaders.Pragma.ParseAdd("no-cache");
+        return http;
     }
 
     /// <summary>The page this probe fetches.</summary>
@@ -72,21 +83,32 @@ public sealed class ConnectivityProbe : IDisposable
     /// <summary>The page fetched by address when DNS fails.</summary>
     public Uri AddressUrl { get; }
 
-    public void Dispose() => _http.Dispose();
+    public void Dispose()
+    {
+        _http.Dispose();
+        _direct.Dispose();
+    }
 
     public Task<ProbeResult> ProbeAsync(CancellationToken cancellationToken) =>
-        FetchAsync(Url, ClassifyAsync, cancellationToken);
+        FetchAsync(_http, Url, ClassifyAsync, cancellationToken);
 
     /// <summary>Fetches <see cref="AddressUrl"/>, for when the network's DNS fails.</summary>
     public Task<ProbeResult> ProbeAddressAsync(CancellationToken cancellationToken) =>
-        FetchAsync(AddressUrl, ClassifyAddressAsync, cancellationToken);
+        FetchAsync(_http, AddressUrl, ClassifyAddressAsync, cancellationToken);
 
-    private async Task<ProbeResult> FetchAsync(
+    /// <summary>
+    /// Fetches <see cref="Url"/> the way any app would, with Windows' DNS and routes rather than the network's DNS:
+    /// through a VPN, when one carries the traffic.
+    /// </summary>
+    public Task<ProbeResult> ProbeDirectAsync(CancellationToken cancellationToken) =>
+        FetchAsync(_direct, Url, ClassifyAsync, cancellationToken);
+
+    private static async Task<ProbeResult> FetchAsync(HttpClient http,
         Uri url, Func<HttpResponseMessage, Uri, CancellationToken, Task<ProbeResult>> classify, CancellationToken cancellationToken)
     {
         try
         {
-            using var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
             return await classify(response, url, cancellationToken).ConfigureAwait(false);
         }

@@ -27,6 +27,29 @@ public class ParsingTests
     }
 
     [Theory]
+    // WireGuard: Wintun, and its default route has no gateway.
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Unknown, "WireGuard Tunnel", false, true)]
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, "Some adapter", false, true)]
+    // OpenVPN and corporate VPNs call themselves Ethernet, with a gateway.
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, "TAP-Windows Adapter V9", true, true)]
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, "Cisco AnyConnect Secure Mobility Client Virtual Miniport Adapter", true, true)]
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Ppp, "WAN Miniport (IKEv2)", true, true)]
+    // Another network: Ethernet with a fixed address next to Wi-Fi.
+    [InlineData(System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, "Realtek USB GbE Family Controller", true, false)]
+    public void ARouteThroughAnotherConnectionIsAVpnWhenItLooksLikeOne(
+        System.Net.NetworkInformation.NetworkInterfaceType type, string description, bool hasGateway, bool expected) =>
+        Assert.Equal(expected, ActiveNetworkFinder.LooksLikeVpn(type, description, hasGateway));
+
+    [Fact]
+    public void AVpnComingUpChangesTheNetworksFingerprint()
+    {
+        var wifi = new ActiveNetwork("{wifi}", "Wi-Fi", 19, [IPAddress.Parse("192.168.1.1")], DnsSource.Dhcp, [IPAddress.Parse("192.168.1.1")]);
+        var throughVpn = wifi with { Via = new TrafficRoute("Home", 42, IsVpn: true) };
+        Assert.NotEqual(wifi.Fingerprint, throughVpn.Fingerprint);
+        Assert.Equal(throughVpn.Fingerprint, (wifi with { Via = new TrafficRoute("Home", 42, IsVpn: true) }).Fingerprint);
+    }
+
+    [Theory]
     [InlineData("https://portal.example/api", "https://portal.example/api")]
     [InlineData("https://portal.example/api\0", "https://portal.example/api")]
     [InlineData("urn:ietf:params:capport:unrestricted", null)]

@@ -15,23 +15,40 @@ public enum DnsSource
     Gateway,
 }
 
-/// <summary>The adapter that carries internet traffic, and the DNS servers its network handed out.</summary>
+/// <summary>
+/// Another connection that internet traffic goes through instead of the network's own adapter: usually a VPN's
+/// tunnel, which owns the default route (WireGuard's 0.0.0.0/0 with no gateway, OpenVPN's 0.0.0.0/1 and 128.0.0.0/1).
+/// </summary>
+/// <param name="Name">What Windows calls the connection, e.g. the WireGuard tunnel's name.</param>
+/// <param name="IsVpn">Whether it looks like a VPN, not another network adapter (e.g. Ethernet with a fixed address).</param>
+public sealed record TrafficRoute(string Name, int InterfaceIndex, bool IsVpn);
+
+/// <summary>The network CapPo watches, and the DNS servers it handed out.</summary>
 /// <param name="AdapterId">The adapter's GUID in braces, as the registry and the DHCP client API name it.</param>
 /// <param name="AdapterName">What Windows calls the connection, e.g. "Wi-Fi".</param>
+/// <param name="Via">
+/// Set when internet traffic goes through another connection (a VPN, usually) rather than this adapter. The network's
+/// sign-in page, if any, still belongs to this adapter.
+/// </param>
 public sealed record ActiveNetwork(
     string AdapterId,
     string AdapterName,
     int InterfaceIndex,
     IReadOnlyList<IPAddress> DnsServers,
     DnsSource DnsSource,
-    IReadOnlyList<IPAddress> Gateways)
+    IReadOnlyList<IPAddress> Gateways,
+    TrafficRoute? Via = null)
 {
-    /// <summary>Changes when the network does in a way that matters here: another adapter, DNS or gateway.</summary>
+    /// <summary>
+    /// Changes when the network does in a way that matters here: another adapter, DNS or gateway, or a VPN coming up
+    /// or going down.
+    /// </summary>
     public string Fingerprint =>
-        $"{AdapterId}|{string.Join(",", DnsServers)}|{string.Join(",", Gateways)}";
+        $"{AdapterId}|{string.Join(",", DnsServers)}|{string.Join(",", Gateways)}|{Via?.InterfaceIndex}";
 
     public override string ToString() =>
-        $"{AdapterName} {AdapterId}, DNS {string.Join(", ", DnsServers)} ({DnsSource}), gateway {string.Join(", ", Gateways)}";
+        $"{AdapterName} {AdapterId}, DNS {string.Join(", ", DnsServers)} ({DnsSource}), gateway {string.Join(", ", Gateways)}"
+        + (Via is { } via ? $", traffic through {via.Name}{(via.IsVpn ? " (VPN)" : "")}" : "");
 }
 
 /// <summary>Finds the <see cref="ActiveNetwork"/>. Reads only; needs no administrator rights.</summary>
@@ -43,11 +60,12 @@ public static partial class ActiveNetworkFinder
     /// <returns>Null when no adapter is up with a gateway: there's no network to sign in to.</returns>
     public static ActiveNetwork? Find()
     {
-        var candidates = NetworkInterface.GetAllNetworkInterfaces()
-            .Where(static n => n.OperationalStatus == OperationalStatus.Up
-                && n.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+        var up = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(static n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
             .Select(static n => (Interface: n, Properties: n.GetIPProperties()))
-            .Where(static c => Gateways(c.Properties).Count > 0)
+            .ToList();
+        var candidates = up
+            .Where(static c => c.Interface.NetworkInterfaceType != NetworkInterfaceType.Tunnel && Gateways(c.Properties).Count > 0)
             .ToList();
         if (candidates.Count == 0)
             return null;
@@ -55,17 +73,54 @@ public static partial class ActiveNetworkFinder
         // The adapter Windows would route internet traffic through goes first. A VPN can be that adapter yet have
         // no DHCP DNS; the physical one behind it then still gets its turn.
         var best = BestInterfaceIndex();
+        ActiveNetwork? found = null;
         foreach (var (nic, properties) in candidates.OrderByDescending(c => IndexOf(c.Properties) == best))
         {
             var dns = DhcpDnsServers(nic.Id, IndexOf(properties));
             if (dns.Count > 0)
-                return new ActiveNetwork(nic.Id, nic.Name, IndexOf(properties), dns, DnsSource.Dhcp, Gateways(properties));
+            {
+                found = new ActiveNetwork(nic.Id, nic.Name, IndexOf(properties), dns, DnsSource.Dhcp, Gateways(properties));
+                break;
+            }
+        }
+        if (found is null)
+        {
+            var (fallback, fallbackProperties) = candidates.OrderByDescending(c => IndexOf(c.Properties) == best).First();
+            var gateways = Gateways(fallbackProperties);
+            found = new ActiveNetwork(fallback.Id, fallback.Name, IndexOf(fallbackProperties), gateways, DnsSource.Gateway, gateways);
         }
 
-        var (fallback, fallbackProperties) = candidates.OrderByDescending(c => IndexOf(c.Properties) == best).First();
-        var gateways = Gateways(fallbackProperties);
-        return new ActiveNetwork(fallback.Id, fallback.Name, IndexOf(fallbackProperties), gateways, DnsSource.Gateway, gateways);
+        // Internet traffic going through another connection: a VPN's tunnel, usually.
+        if (best > 0 && best != found.InterfaceIndex
+            && up.FirstOrDefault(c => IndexOf(c.Properties) == best) is ({ } via, { } viaProperties))
+        {
+            var isVpn = LooksLikeVpn(via.NetworkInterfaceType, via.Description, Gateways(viaProperties).Count > 0);
+            found = found with { Via = new TrafficRoute(via.Name, best, isVpn) };
+        }
+        return found;
     }
+
+    /// <summary>
+    /// Whether a connection that carries internet traffic in place of the network's adapter is a VPN, not just another
+    /// network (Ethernet with a fixed address, say, next to Wi-Fi).
+    /// </summary>
+    /// <param name="hasGateway">
+    /// Tunnels that own the default route often have no gateway: WireGuard's route is 0.0.0.0/0 to the link itself.
+    /// </param>
+    public static bool LooksLikeVpn(NetworkInterfaceType type, string description, bool hasGateway)
+    {
+        if (!hasGateway || type is NetworkInterfaceType.Ppp or NetworkInterfaceType.Tunnel)
+            return true;
+        // Wintun (WireGuard), TAP (OpenVPN) and most corporate VPN adapters call themselves Ethernet; their
+        // descriptions give them away.
+        return VpnDescriptions.Any(n => description.Contains(n, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static readonly string[] VpnDescriptions =
+    [
+        "VPN", "WireGuard", "Wintun", "TAP-Windows", "Tailscale", "ZeroTier", "AnyConnect", "GlobalProtect", "PANGP",
+        "Fortinet", "Juniper", "Pulse Secure", "SonicWall", "Check Point", "NordLynx",
+    ];
 
     /// <summary>The DNS servers DHCP gave this adapter, IPv4 first, as the registry keeps them.</summary>
     public static IReadOnlyList<IPAddress> DhcpDnsServers(string adapterId, int interfaceIndex)

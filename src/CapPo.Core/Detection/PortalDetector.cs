@@ -21,6 +21,12 @@ public sealed record PortalDetectorOptions
     public Uri? AddressProbeUrl { get; init; }
 
     public TimeSpan ProbeTimeout { get; init; } = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    /// When internet traffic goes through another connection (a VPN, usually), probe through it first, the way any app
+    /// would. Off for the simulated portal, which only answers through the proxy.
+    /// </summary>
+    public bool ProbeThroughVpn { get; init; } = true;
 }
 
 public enum NetworkState
@@ -60,6 +66,7 @@ public sealed class PortalDetector : IAsyncDisposable
 
     private readonly ILogger _log;
     private readonly ConnectivityProbe _probe;
+    private readonly bool _probeThroughVpn;
     private readonly SemaphoreSlim _oneAtATime = new(1, 1);
     // Option 114, read once per network.
     private string? _apiFingerprint;
@@ -77,6 +84,7 @@ public sealed class PortalDetector : IAsyncDisposable
         };
         Proxy.Start();
         _probe = new ConnectivityProbe(Proxy.Address, options.ProbeTimeout, options.ProbeUrl, options.AddressProbeUrl);
+        _probeThroughVpn = options.ProbeThroughVpn;
     }
 
     /// <summary>Normally a <see cref="DhcpDnsResolver"/>, pointed at each network's DNS as it's found.</summary>
@@ -112,7 +120,21 @@ public sealed class PortalDetector : IAsyncDisposable
             _apiFingerprint = network.Fingerprint;
             _apiUrl = DhcpCaptivePortalOption.TryGetAsync(network.AdapterId, DhcpOptionTimeout);
         }
-        var probe = await _probe.ProbeAsync(cancellationToken).ConfigureAwait(false);
+        // A VPN (usually) carries the traffic: the probe through the network's DNS goes into the tunnel too, or is
+        // blocked by its kill switch. So also ask the way any app would, at the same time: if that works, no portal
+        // stands in the way. Without a kill switch, the network's DNS may still find a portal when the tunnel is dead.
+        var probeTask = _probe.ProbeAsync(cancellationToken);
+        var viaDetail = "";
+        if (network.Via is { } via && _probeThroughVpn)
+        {
+            var direct = await _probe.ProbeDirectAsync(cancellationToken).ConfigureAwait(false);
+            // The other probe finishes on its own; its answer no longer matters.
+            if (direct.Outcome == ProbeOutcome.Online)
+                return Result(NetworkState.Online, network, null, $"Through {via.Name}: {direct.Detail}");
+            viaDetail = $"Through {via.Name}: {direct.Detail} Through the network's DNS: ";
+        }
+
+        var probe = await probeTask.ConfigureAwait(false);
         var probed = _probe.Url;
         if (probe.ProxyError == "dns")
         {
@@ -131,8 +153,8 @@ public sealed class PortalDetector : IAsyncDisposable
 
         // Open the probed page itself rather than where it redirected: redirects often carry one-time tokens.
         return probe.Outcome == ProbeOutcome.Portal
-            ? Result(NetworkState.Portal, network, api?.UserPortalUrl ?? probed, probe.Detail)
-            : Result(NetworkState.Unreachable, network, null, probe.Detail);
+            ? Result(NetworkState.Portal, network, api?.UserPortalUrl ?? probed, viaDetail + probe.Detail)
+            : Result(NetworkState.Unreachable, network, null, viaDetail + probe.Detail);
     }
 
     private async Task<CaptivePortalApiState?> QueryApiAsync(CancellationToken cancellationToken)

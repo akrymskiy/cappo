@@ -19,6 +19,8 @@ public sealed class SimulatedPortalTests : IAsyncLifetime
             Resolver = _portal,
             AllowDestination = _portal.AllowDestination,
             ProbeUrl = new Uri($"http://www.msftconnecttest.com:{_portal.Port}/connecttest.txt"),
+            // The simulation only answers through the proxy, VPN or not.
+            ProbeThroughVpn = false,
         });
         return ValueTask.CompletedTask;
     }
