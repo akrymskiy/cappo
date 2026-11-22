@@ -1,6 +1,7 @@
 using CapPo.App.RunModes;
 using CapPo.App.Tray;
 using CapPo.Core.Detection;
+using CapPo.Core.Network;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
@@ -24,6 +25,7 @@ internal sealed class AppController
     private PortalWindow? _portal;
     private MainWindow? _main;
     private bool _oneShot;
+    private bool _watchingConnectivity;
     private bool _reportNextCheck;
     private bool _exiting;
     // The network's name, looked up once per network.
@@ -38,6 +40,7 @@ internal sealed class AppController
         };
         _monitor.Checked += r => App.Dispatcher.TryEnqueue(() => OnChecked(r));
         _monitor.StateChanged += r => App.Dispatcher.TryEnqueue(() => OnStateChanged(r));
+        _monitor.CheckingChanged += () => App.Dispatcher.TryEnqueue(() => Changed?.Invoke());
         _monitor.SignedIn += r => App.Dispatcher.TryEnqueue(() => OnSignedIn(r));
     }
 
@@ -58,14 +61,20 @@ internal sealed class AppController
     /// <summary>A portal waits for a sign-in that CapPo can help with: the tray and window icons show the feather.</summary>
     public bool SignInNeeded => Last?.State == NetworkState.Portal && License.IsUsable;
 
+    /// <summary>A VPN carrying the traffic, if one is.</summary>
+    private TrafficRoute? Vpn => Last?.Network?.Via is { IsVpn: true } via ? via : null;
+
     public string StatusTitle => !License.IsUsable
         ? "Trial ended"
-        : Last?.State switch
+        : (Last?.State, Last?.Network?.Via) switch
         {
-            null => "Checking…",
-            NetworkState.Online => $"Online · {NetworkName}",
-            NetworkState.Portal => $"Sign-in needed · {NetworkName}",
-            NetworkState.Unreachable => $"No internet · {NetworkName}",
+            (null, _) => "Checking…",
+            (NetworkState.Online, { IsVpn: true } via) => $"Online through a VPN ({via.Name})",
+            (NetworkState.Online, { } via) => $"Online · {via.Name}",
+            (NetworkState.Online, _) => $"Online · {NetworkName}",
+            (NetworkState.Portal, _) => $"Sign-in needed · {NetworkName}",
+            (NetworkState.Unreachable, { IsVpn: true } via) => $"No internet through the VPN ({via.Name})",
+            (NetworkState.Unreachable, _) => $"No internet · {NetworkName}",
             _ => "Not connected",
         };
 
@@ -78,11 +87,16 @@ internal sealed class AppController
                 return "Looking at the network." + simulated;
             var dns = last.Network is { } n ? string.Join(", ", n.DnsServers) : "";
             var every = $"CapPo checks again when the network changes, and every {Settings.RecheckMinutes} minutes.";
-            return last.State switch
+            var turnOffVpn = Vpn is { } vpn
+                ? $" A VPN can't get past a sign-in page: turn {vpn.Name} off to sign in, then turn it back on."
+                : "";
+            return (last.State, last.Network?.Via) switch
             {
-                NetworkState.Online => $"Checked at {last.CheckedAt:t}. {every}",
-                NetworkState.Portal => $"The network wants you to sign in. Its sign-in page loads with its own DNS ({dns}), in CapPo's window only.",
-                NetworkState.Unreachable => $"Connected, but nothing answers: {last.Detail}",
+                (NetworkState.Online, { } via) => $"Your traffic goes through {via.Name}, over {NetworkName}. Checked at {last.CheckedAt:t}. {every}",
+                (NetworkState.Online, _) => $"Checked at {last.CheckedAt:t}. {every}",
+                (NetworkState.Portal, _) => $"The network wants you to sign in. Its sign-in page loads with its own DNS ({dns}), in CapPo's window only.{turnOffVpn}",
+                (NetworkState.Unreachable, { IsVpn: true } via) => $"Nothing answers through {via.Name}. If {NetworkName} has a sign-in page, the VPN can't get past it: turn the VPN off, sign in, then turn it back on.",
+                (NetworkState.Unreachable, _) => $"Connected, but nothing answers: {last.Detail}",
                 _ => "Connect to a network to sign in to it.",
             } + simulated;
         }
@@ -181,8 +195,17 @@ internal sealed class AppController
         _portal.Present();
     }
 
+    /// <summary>A check is running: Settings says so, and Check now waits for it.</summary>
+    public bool IsChecking => _monitor.IsChecking;
+
     public void CheckNow(bool reportResult)
     {
+        // One running already: its result is as fresh. Asking again would only queue another (slow, on a dead network).
+        if (_monitor.IsChecking)
+        {
+            _reportNextCheck |= reportResult;
+            return;
+        }
         _reportNextCheck = reportResult;
         _monitor.CheckNow();
     }
@@ -255,6 +278,13 @@ internal sealed class AppController
             }
         }
         _monitor.WatchNetwork();
+        if (!_watchingConnectivity)
+        {
+            // Windows' own connectivity check changing its mind (e.g. a VPN's tunnel lost its way out, which changes
+            // no address) is worth a check too.
+            Windows.Networking.Connectivity.NetworkInformation.NetworkStatusChanged += _ => _monitor.NetworkMayHaveChanged();
+            _watchingConnectivity = true;
+        }
         if (showWindow || _tray is null)
             ShowMainWindow();
     }

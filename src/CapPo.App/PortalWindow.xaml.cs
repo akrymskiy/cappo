@@ -167,8 +167,11 @@ public sealed partial class PortalWindow : Window
         var name = Engine.NetworkName(result);
         Title = AppTitleBar.Title = $"Sign in to {name}";
         _icon.Show(signIn: result.State == NetworkState.Portal);
+        var vpn = result.Network?.Via is { IsVpn: true } via ? via.Name : null;
         StatusText.Text = result.State switch
         {
+            NetworkState.Portal when vpn is not null =>
+                $"Waiting for you to sign in to {name}. If the page doesn't load, turn the VPN ({vpn}) off to sign in.",
             NetworkState.Portal => $"Waiting for you to sign in to {name}. CapPo checks every few seconds.",
             NetworkState.Online => "You're online.",
             NetworkState.NoNetwork => "Not connected to a network.",

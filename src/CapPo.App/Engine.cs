@@ -34,6 +34,7 @@ internal sealed class Engine : IAsyncDisposable
             Resolver = simulation,
             AllowDestination = simulation.AllowDestination,
             ProbeTimeout = probeTimeout,
+            ProbeThroughVpn = false,
         }), simulation);
     }
 

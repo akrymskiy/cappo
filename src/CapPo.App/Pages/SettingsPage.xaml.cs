@@ -37,7 +37,8 @@ public sealed partial class SettingsPage : Page
     {
         var last = Controller.Last;
         StatusTitle.Text = Controller.StatusTitle;
-        StatusDetail.Text = Controller.StatusDetail;
+        StatusDetail.Text = Controller.IsChecking ? "Checking…" : Controller.StatusDetail;
+        CheckNowButton.IsEnabled = !Controller.IsChecking;
         StatusIcon.Glyph = last?.State switch
         {
             NetworkState.Online => "",
