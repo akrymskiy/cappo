@@ -55,7 +55,7 @@ public static partial class DnsEncryptionReader
                 .ToList();
             var isTunnel = nic.NetworkInterfaceType is NetworkInterfaceType.Tunnel or NetworkInterfaceType.Ppp;
             adapters.Add(new AdapterDnsStatus(nic.Id, nic.Name, nic.Description,
-                nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211, ServersTypedIn(nic.Id), carries,
+                nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211, ServersFrom(nic.Id), carries,
                 isTunnel || (carries && !hasGateway), statuses));
         }
 
@@ -67,12 +67,27 @@ public static partial class DnsEncryptionReader
     private static DohEntry? Find(IReadOnlyList<DohEntry> entries, IPAddress server) =>
         entries.FirstOrDefault(e => e.Address.GetAddressBytes().AsSpan().SequenceEqual(server.GetAddressBytes()));
 
-    private static bool ServersTypedIn(string adapterId)
+    /// <summary>
+    /// Servers typed in for the adapter sit in its own key (on Wi-Fi, that's "for all Wi-Fi networks", which Settings
+    /// says overrides each network's own). A Wi-Fi network's own settings sit in a subkey named after the network
+    /// (its SSID in hex, nibbles swapped), and DhcpNetworkHint names the connected network's.
+    /// </summary>
+    private static DnsServersFrom ServersFrom(string adapterId)
     {
         using var v4 = Registry.LocalMachine.OpenSubKey(Tcpip4Interfaces + adapterId);
         using var v6 = Registry.LocalMachine.OpenSubKey(Tcpip6Interfaces + adapterId);
-        return !string.IsNullOrWhiteSpace(v4?.GetValue("NameServer") as string)
-            || !string.IsNullOrWhiteSpace(v6?.GetValue("NameServer") as string);
+        if (HasServers(v4) || HasServers(v6))
+            return DnsServersFrom.Adapter;
+        if (v4?.GetValue("DhcpNetworkHint") is string { Length: > 0 } network)
+        {
+            using var own4 = v4.OpenSubKey(network);
+            using var own6 = v6?.OpenSubKey(network);
+            if (HasServers(own4) || HasServers(own6))
+                return DnsServersFrom.ThisWifiNetwork;
+        }
+        return DnsServersFrom.Network;
+
+        static bool HasServers(RegistryKey? key) => !string.IsNullOrWhiteSpace(key?.GetValue("NameServer") as string);
     }
 
     /// <summary>Windows' list of known DoH servers, with the ones the user added ("Set-DnsClientDohServerAddress").</summary>

@@ -76,7 +76,7 @@ public class DnsEncryptionTests
     [InlineData(new ServerEncryption[0], DnsVerdict.NoNetwork)]
     public void VerdictFollowsTheWeakestServer(ServerEncryption[] servers, DnsVerdict expected)
     {
-        var adapter = new AdapterDnsStatus("{id}", "Wi-Fi", "", true, true, true, false,
+        var adapter = new AdapterDnsStatus("{id}", "Wi-Fi", "", true, DnsServersFrom.Adapter, true, false,
             servers.Select(e => new DnsServerStatus(Server, e, null, TemplateSource.None)).ToList());
         Assert.Equal(expected, DnsEncryptionReport.Judge(DohPolicy.NotConfigured, adapter));
     }

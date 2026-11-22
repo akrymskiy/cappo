@@ -108,6 +108,8 @@ public sealed partial class DnsPage : Page
         var plain = main?.Servers.Where(static s => s.Encryption == ServerEncryption.None).Select(static s => s.Address.ToString()).ToList() ?? [];
         (VerdictIcon.Glyph, VerdictTitle.Text, VerdictDetail.Text) = report.Verdict switch
         {
+            DnsVerdict.Strict when main is { IsWireless: true, ServersFrom: DnsServersFrom.Adapter } => (Encrypted, $"Encrypted only · {name}",
+                "On every Wi-Fi network, including ones you haven't joined yet, Windows looks up every name with encrypted DNS and never falls back to plain DNS. A sign-in page can't open by itself with settings like these; CapPo opens it."),
             DnsVerdict.Strict => (Encrypted, $"Encrypted only · {name}",
                 "On this network, Windows looks up every name with encrypted DNS and never falls back to plain DNS. A sign-in page can't open by itself with settings like these; CapPo opens it."),
             DnsVerdict.Fallback => (Fallback, $"Encrypted, with fallback · {name}",
@@ -129,11 +131,15 @@ public sealed partial class DnsPage : Page
         panel.Children.Add(new TextBlock
         {
             Style = Resource("SecondaryTextStyle"),
-            Text = adapter.ServersTypedIn
-                ? adapter.IsWireless
-                    ? "DNS servers typed in for this Wi-Fi network. Windows keeps these settings per network: a Wi-Fi network you join for the first time uses its own DNS, unencrypted, until you set it up too."
-                    : "DNS servers typed in for this connection."
-                : "DNS servers handed out by the network (DHCP).",
+            Text = adapter.ServersFrom switch
+            {
+                DnsServersFrom.Adapter when adapter.IsWireless =>
+                    "DNS servers typed in for all Wi-Fi networks (Wi-Fi > Hardware properties), so networks you haven't joined yet use them too.",
+                DnsServersFrom.Adapter => "DNS servers typed in for this connection.",
+                DnsServersFrom.ThisWifiNetwork =>
+                    "DNS servers typed in for this Wi-Fi network only. A Wi-Fi network you join for the first time uses its own DNS, unencrypted. To cover every network, set DNS for all Wi-Fi networks (Wi-Fi > Hardware properties).",
+                _ => "DNS servers handed out by the network (DHCP).",
+            },
         });
         foreach (var server in adapter.Servers)
             panel.Children.Add(ServerRow(server, adapter.IsVpn));

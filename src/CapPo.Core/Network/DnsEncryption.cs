@@ -46,8 +46,21 @@ public sealed record DohEntry(IPAddress Address, string? Template, ulong Flags)
 
 public sealed record DnsServerStatus(IPAddress Address, ServerEncryption Encryption, string? Template, TemplateSource Source);
 
+/// <summary>Where an adapter's DNS servers come from.</summary>
+public enum DnsServersFrom
+{
+    /// <summary>Handed out by the network (DHCP).</summary>
+    Network,
+    /// <summary>
+    /// Typed in for the adapter: on Wi-Fi, "for all Wi-Fi networks" (Wi-Fi, Hardware properties), which also covers
+    /// networks not joined yet, and overrides any network's own setting.
+    /// </summary>
+    Adapter,
+    /// <summary>Typed in for this Wi-Fi network only, in its properties.</summary>
+    ThisWifiNetwork,
+}
+
 /// <summary>One adapter's DNS servers and how each is used.</summary>
-/// <param name="ServersTypedIn">The servers were typed in (per Wi-Fi network, on Wi-Fi), not handed out by the network.</param>
 /// <param name="CarriesInternet">Windows routes internet traffic through this adapter.</param>
 /// <param name="IsVpn">A VPN or other tunnel: it carries internet traffic but has no gateway, or is a tunnel.</param>
 public sealed record AdapterDnsStatus(
@@ -55,7 +68,7 @@ public sealed record AdapterDnsStatus(
     string AdapterName,
     string Description,
     bool IsWireless,
-    bool ServersTypedIn,
+    DnsServersFrom ServersFrom,
     bool CarriesInternet,
     bool IsVpn,
     IReadOnlyList<DnsServerStatus> Servers);
