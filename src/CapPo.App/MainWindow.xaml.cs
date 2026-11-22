@@ -7,7 +7,7 @@ using Windows.Graphics;
 
 namespace CapPo.App;
 
-/// <summary>CapPo's window: Settings and About. Closing it leaves CapPo running in the notification area.</summary>
+/// <summary>CapPo's window: Settings, DNS and About. Closing it leaves CapPo running in the notification area.</summary>
 public sealed partial class MainWindow : Window
 {
     private const int OpenWidth = 760, OpenHeight = 640;
@@ -34,11 +34,17 @@ public sealed partial class MainWindow : Window
     /// <summary>The feather in the icon while a portal waits for a sign-in, as in the tray.</summary>
     public void ShowSignInIcon(bool signIn) => _icon.Show(signIn);
 
-    public void ShowPage(bool about) => NavView.SelectedItem = NavView.MenuItems[about ? 1 : 0];
+    public void ShowPage(bool about) =>
+        NavView.SelectedItem = NavView.MenuItems.OfType<NavigationViewItem>().First(i => (string)i.Tag == (about ? "About" : "Settings"));
 
     private void OnNavigationSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        var page = (args.SelectedItem as NavigationViewItem)?.Tag as string == "About" ? typeof(AboutPage) : typeof(SettingsPage);
+        var page = ((args.SelectedItem as NavigationViewItem)?.Tag as string) switch
+        {
+            "About" => typeof(AboutPage),
+            "Dns" => typeof(DnsPage),
+            _ => typeof(SettingsPage),
+        };
         if (RootFrame.CurrentSourcePageType != page)
             RootFrame.Navigate(page, null, new EntranceNavigationTransitionInfo());
     }

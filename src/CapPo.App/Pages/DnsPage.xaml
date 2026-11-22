@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="CapPo.App.Pages.DnsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer>
+        <StackPanel MaxWidth="760" Padding="32,8,32,32" Spacing="4">
+            <TextBlock Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" Text="DNS" />
+
+            <!-- The verdict for the connection internet traffic goes through. -->
+            <Grid Style="{StaticResource CardStyle}" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon x:Name="VerdictIcon" VerticalAlignment="Center" FontSize="24" Glyph="&#xE72E;" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="VerdictTitle" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="VerdictDetail" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
+                <Button x:Name="WindowsSettingsButton" Grid.Column="2" VerticalAlignment="Center" Click="OnOpenWindowsSettings" Content="Windows settings" />
+            </Grid>
+
+            <InfoBar x:Name="PolicyBar" IsClosable="False" Severity="Informational" Title="Group Policy" />
+
+            <StackPanel x:Name="AdaptersPanel" Spacing="4" />
+
+            <StackPanel x:Name="RulesSection" Spacing="4" Visibility="Collapsed">
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Names sent to other servers" />
+                <Grid Style="{StaticResource CardStyle}">
+                    <StackPanel x:Name="RulesPanel" Spacing="8" />
+                </Grid>
+            </StackPanel>
+
+            <TextBlock Margin="0,16,0,0" Style="{StaticResource SecondaryTextStyle}">
+                CapPo matters when Windows' DNS is encrypted only, with no fallback: then Windows can't look up a sign-in page's name on a new network, and CapPo's sign-in window looks it up with that network's own DNS instead. CapPo only reads these settings; change them in Windows' settings for each network.
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

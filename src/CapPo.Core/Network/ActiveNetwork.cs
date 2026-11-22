@@ -116,7 +116,7 @@ public static partial class ActiveNetworkFinder
             .OrderBy(static a => a.AddressFamily == AddressFamily.InterNetworkV6 ? 1 : 0)
             .ToList();
 
-    private static int IndexOf(IPInterfaceProperties properties)
+    internal static int IndexOf(IPInterfaceProperties properties)
     {
         try
         {
@@ -129,7 +129,7 @@ public static partial class ActiveNetworkFinder
     }
 
     // A route lookup only: nothing is sent to this address.
-    private static int BestInterfaceIndex()
+    internal static int BestInterfaceIndex()
     {
         var destination = BitConverter.ToUInt32(IPAddress.Parse("1.1.1.1").GetAddressBytes());
         return GetBestInterface(destination, out var index) == 0 ? (int)index : -1;

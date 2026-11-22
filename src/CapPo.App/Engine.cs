@@ -38,15 +38,17 @@ internal sealed class Engine : IAsyncDisposable
     }
 
     /// <summary>What to call the network in the UI: the Wi-Fi name if Windows will say, else the adapter's.</summary>
-    public static string NetworkName(DetectionResult? result)
+    public static string NetworkName(DetectionResult? result) =>
+        result?.Network is { } network ? NetworkName(network.AdapterId, network.AdapterName) : "the network";
+
+    /// <param name="adapterName">What to say when Windows doesn't name the network, e.g. "Wi-Fi".</param>
+    public static string NetworkName(string adapterId, string adapterName)
     {
-        if (result?.Network is not { } network)
-            return "the network";
         try
         {
             // Every saved Wi-Fi profile is listed against the adapter, connected or not; only the connected one has a
             // connectivity level (behind a portal it's LocalAccess or ConstrainedInternetAccess, not None).
-            if (Guid.TryParse(network.AdapterId, out var adapter)
+            if (Guid.TryParse(adapterId, out var adapter)
                 && NetworkInformation.GetConnectionProfiles().FirstOrDefault(p =>
                     p.NetworkAdapter?.NetworkAdapterId == adapter
                     && p.GetNetworkConnectivityLevel() != NetworkConnectivityLevel.None) is { } profile
@@ -57,7 +59,7 @@ internal sealed class Engine : IAsyncDisposable
         {
             Log.Error(ex, "Couldn't read the network's name");
         }
-        return network.AdapterName;
+        return adapterName;
     }
 
     public async ValueTask DisposeAsync()
