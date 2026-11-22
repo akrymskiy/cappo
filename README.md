@@ -2,11 +2,11 @@
 
 *Sign-in page? I know a guy.*
 
-**Keep encrypted DNS on, and still sign in to hotel, library and café Wi-Fi.**
+Keep encrypted DNS on, and still sign in to **Cap**tive **Po**rtals (hotel, library and café Wi-Fi).
 
 You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare), with fallback to plain DNS turned off. Then you join hotel Wi-Fi, and the sign-in page never appears: the network blocks encrypted DNS until you sign in, and you can't sign in without its DNS. The usual fix is to turn encrypted DNS off, sign in, and remember to turn it back on.
 
-CapPo does that dance for you, without touching your settings. It notices the sign-in page, opens it in its own window, and closes the window once you're online.
+**CapPo** does that dance for you, without touching your settings. It notices the sign-in page, opens it in its own window, and closes the window once you're online.
 
 ## Do you need it?
 
@@ -53,6 +53,8 @@ The GitHub version isn't code-signed, so Windows may warn you the first time you
 
 Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in window needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11.
 
+Questions or problems: see [Support](https://cappo.krymskiy.net/support).
+
 ## Support the project
 
 If CapPo saves you some hassle, you can [buy me a coffee](https://buymeacoffee.com/akrymskiy) or buy it from the Microsoft Store.
@@ -80,7 +82,7 @@ There's a simulated captive portal for trying CapPo without a hotel: in a Debug 
 
 ## Privacy
 
-CapPo has no telemetry or analytics and collects nothing. See [PRIVACY.md](PRIVACY.md).
+CapPo has no telemetry or analytics and collects nothing. See the [privacy policy](https://cappo.krymskiy.net/privacy).
 
 ## License
 

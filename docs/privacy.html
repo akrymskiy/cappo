@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CapPo privacy policy</title>
+  <meta name="description" content="CapPo does not collect, store or transmit any personal data.">
+  <link rel="icon" href="favicon-light.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./">
+        <img class="logo-light" src="icon-light.png" alt=""><img class="logo-dark" src="icon-dark.png" alt="">CapPo
+      </a>
+      <nav>
+        <a href="support">Support</a>
+        <a href="privacy" aria-current="page">Privacy</a>
+        <a href="https://github.com/akrymskiy/cappo">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap page">
+    <h1>Privacy policy</h1>
+    <p class="updated">Last updated: 22 November 2026</p>
+
+    <p>
+      CapPo does not collect, store or transmit any personal data. It has no telemetry, analytics, crash reporting or
+      advertising, and it has no accounts.
+    </p>
+
+    <h2>What CapPo does on your PC</h2>
+    <ul>
+      <li><strong>Reads your network settings.</strong> CapPo finds your active network connection and the DNS servers
+        that network handed out (DHCP). It never changes Windows' network or DNS settings.</li>
+      <li><strong>Checks for a sign-in page.</strong> CapPo fetches Microsoft's connectivity test page
+        (<code>http://www.msftconnecttest.com/connecttest.txt</code>), the same page Windows itself uses to check for
+        internet access. That request goes to Microsoft, as Windows' own check does. It contains nothing about you
+        beyond what any web request does, such as your IP address.</li>
+      <li><strong>Shows the sign-in page.</strong> When a network wants you to sign in, CapPo shows its page in a
+        window. What you type there goes to that network's sign-in page, not to CapPo. The page is loaded through a
+        small proxy that runs on your PC (127.0.0.1) and is only for that window.</li>
+      <li><strong>Keeps a few files on your PC.</strong> Settings, a short log of what CapPo checked (network state,
+        adapter names, DNS server addresses, sign-in page hosts), and the sign-in window's browser data (such as cookies
+        a sign-in page sets). They stay on your PC:
+        <ul>
+          <li>GitHub version: <code>%LocalAppData%\CapPo</code></li>
+          <li>Microsoft Store version: CapPo's app data folder, which Windows removes when you uninstall CapPo</li>
+        </ul>
+      </li>
+    </ul>
+    <p>
+      Nothing in these files is ever sent anywhere. If you choose to attach CapPo's log to a problem report, it goes
+      where you post it, and nowhere else.
+    </p>
+
+    <h2>Microsoft Store version</h2>
+    <p>
+      The Store version asks the Microsoft Store whether you own CapPo or are on a trial. That's handled by Windows and
+      the Microsoft Store under <a href="https://privacy.microsoft.com/privacystatement">Microsoft's privacy
+      statement</a>. CapPo receives only the answer.
+    </p>
+
+    <h2>This website</h2>
+    <p>
+      This site has no cookies, analytics or scripts, and loads nothing from other sites. It's hosted on GitHub Pages,
+      which may log visitors' IP addresses for security, under
+      <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub's privacy
+      statement</a>.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions about this policy: open an issue at
+      <a href="https://github.com/akrymskiy/cappo/issues">github.com/akrymskiy/cappo/issues</a>.
+    </p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="motto">Your DNS is under my protection. Capisce?</span>
+      <span><a href="support">Support</a> · <a href="privacy">Privacy</a> · <a href="https://github.com/akrymskiy/cappo">Source code</a> · © 2026 Alex Krymskiy · Made with love in Brooklyn</span>
+    </div>
+  </footer>
+</body>
+</html>
