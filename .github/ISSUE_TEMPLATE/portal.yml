@@ -1,0 +1,73 @@
+name: A sign-in page didn't work
+description: CapPo didn't notice a captive portal, didn't show its page, or didn't notice you'd signed in.
+labels: [portal]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it: portals come in all shapes, and each report helps CapPo handle more of them.
+        **Issues here are public.** Don't include anything you'd rather not share, such as names, room numbers or
+        passwords.
+
+  - type: input
+    id: place
+    attributes:
+      label: Where were you?
+      description: The kind of place, and the chain or Wi-Fi provider if you know it.
+      placeholder: e.g. a Marriott hotel, an airport (Boingo), a public library, a café, a flight
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What CapPo's icon said, whether the sign-in window opened, and what it showed. Screenshots help.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build
+    attributes:
+      label: Which CapPo?
+      description: Shown in About CapPo, with the version.
+      options:
+        - GitHub
+        - Microsoft Store
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: CapPo version
+      placeholder: e.g. 0.9.0-beta.1
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Settings > System > About, under Windows specifications.
+      placeholder: e.g. Windows 11 24H2
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: setup
+    attributes:
+      label: Your setup
+      options:
+        - label: A VPN was connected
+        - label: Encrypted DNS is set for all Wi-Fi networks, with unencrypted fallback off
+
+  - type: textarea
+    id: log
+    attributes:
+      label: CapPo's log
+      description: |
+        In About CapPo, choose **Open CapPo's folder** and paste the part of `cappo.log` from around that time.
+        It lists network names, adapter names, DNS server addresses and sign-in page addresses: look it over first,
+        and remove anything you'd rather not share.
+      render: text
