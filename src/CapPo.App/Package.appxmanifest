@@ -11,8 +11,8 @@
   IgnorableNamespaces="uap uap5 uap10 com rescap">
 
   <!--
-    Identity must match Partner Center (Product identity) exactly. The publisher is the account's (as for Firmly);
-    the name is a placeholder until CapPo is reserved there.
+    Identity must match Partner Center (Product identity) exactly: package family name
+    AlexKrymskiy.CapPo_kvazxk5j9h2yc, Store ID 9NHT91D939HJ. The publisher is the account's (as for Firmly).
   -->
   <Identity
     Name="AlexKrymskiy.CapPo"

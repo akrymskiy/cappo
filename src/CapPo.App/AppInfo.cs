@@ -9,11 +9,14 @@ internal static partial class AppInfo
     public const string Name = "CapPo";
 
     // Links on the About page. An empty one isn't shown.
+    /// <summary>CapPo's web pages (docs/ on GitHub Pages). The Store listing points at its privacy and support pages.</summary>
+    public const string WebsiteUrl = "https://cappo.krymskiy.net/";
+    public const string SupportUrl = WebsiteUrl + "support";
+    public const string PrivacyUrl = WebsiteUrl + "privacy";
     public const string GitHubUrl = "https://github.com/akrymskiy/cappo";
     /// <summary>Empty until GitHub Sponsors is approved: https://github.com/sponsors/akrymskiy</summary>
     public const string SponsorUrl = "";
     public const string BuyMeACoffeeUrl = "https://buymeacoffee.com/akrymskiy";
-    public const string PrivacyUrl = GitHubUrl + "/blob/main/PRIVACY.md";
     public const string LicenseUrl = GitHubUrl + "/blob/main/LICENSE";
     public const string LicenseName = "GNU General Public License v3.0";
 

@@ -13,6 +13,8 @@ public sealed partial class AboutPage : Page
         ActualThemeChanged += (_, _) => ShowLogo();
         VersionText.Text = $"Version {AppInfo.Version} · {(AppInfo.IsStoreBuild ? "Microsoft Store" : "GitHub")} build";
         LicenseText.Text = $"CapPo is free software, under the {AppInfo.LicenseName}. Copyright © 2026 Alex Krymskiy.";
+        Link(WebsiteLink, AppInfo.WebsiteUrl);
+        Link(SupportLink, AppInfo.SupportUrl);
         Link(GitHubLink, AppInfo.GitHubUrl);
         Link(SponsorLink, AppInfo.SponsorUrl);
         Link(CoffeeLink, AppInfo.BuyMeACoffeeUrl);
