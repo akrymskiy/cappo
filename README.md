@@ -51,7 +51,7 @@ Both versions are built from this code and work the same way. The Store version 
 
 The GitHub version isn't code-signed, so Windows may warn you the first time you run it: click **More info**, then **Run anyway**. If Smart App Control blocks it (it offers no way past), or you'd rather skip the warning, get the Microsoft Store version: it's signed, updates itself, and supports development.
 
-Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in window needs the Microsoft Edge WebView2 Runtime, which comes with Windows 11.
+Requirements: Windows 10 version 2004 or later, or Windows 11. The sign-in window uses the Microsoft Edge WebView2 Runtime, which comes with Windows 11 and is on most Windows 10 PCs. If it's missing, CapPo says so when it starts, so you can [install it](https://go.microsoft.com/fwlink/p/?LinkId=2124703) while you're online.
 
 Questions or problems: see [Support](https://cappo.krymskiy.net/support).
 
