@@ -42,7 +42,8 @@
         beyond what any web request does, such as your IP address.</li>
       <li><strong>Shows the sign-in page.</strong> When a network wants you to sign in, <span translate="no">CapPo</span> shows its page in a
         window. What you type there goes to that network's sign-in page, not to <span translate="no">CapPo</span>. The page is loaded through a
-        small proxy that runs on your PC (127.0.0.1) and is only for that window.</li>
+        tiny proxy inside the app, which only that window uses and nothing outside your PC can reach (it listens on
+        127.0.0.1 only).</li>
       <li><strong>Keeps a few files on your PC.</strong> Settings, a short log of what <span translate="no">CapPo</span> checked (network state,
         adapter names, DNS server addresses, sign-in page hosts), and the sign-in window's browser data (such as cookies
         a sign-in page sets). They stay on your PC:

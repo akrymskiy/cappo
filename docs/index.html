@@ -64,7 +64,8 @@
       <h2>How it works</h2>
       <ul class="points">
         <li><strong>The network's DNS, inside the sign-in window only.</strong> <span translate="no">CapPo</span> reads the DNS servers the network
-          handed out (DHCP) and runs a small proxy on your PC (127.0.0.1) that looks names up with them. Only <span translate="no">CapPo</span>'s
+          handed out (DHCP) and runs a tiny proxy inside the app that looks names up with them. Nothing outside
+          your PC can reach it. Only <span translate="no">CapPo</span>'s
           sign-in window uses that proxy. Everything else keeps using your encrypted DNS.</li>
         <li><strong>Your system DNS is never touched.</strong> <span translate="no">CapPo</span> doesn't change Windows' DNS settings, and it needs
           no administrator rights.</li>

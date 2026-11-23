@@ -20,7 +20,7 @@
                         <Run FontWeight="SemiBold" Text="Cap" /><Run Text="tive" />
                         <Run FontWeight="SemiBold" Text="Po" /><Run Text="rtals (airport, hotel, library and café Wi-Fi)." />
                     </TextBlock>
-                    <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Text="Those networks' sign-in pages only load through the network's own DNS. CapPo's sign-in window is the only thing that uses it: the window's browser sends its requests through CapPo itself (a proxy inside CapPo, reachable only from this PC), which looks names up with the network's DNS. Nothing else goes through CapPo, Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
+                    <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Text="Those networks' sign-in pages only load through the network's own DNS. CapPo's sign-in window is the only thing that uses it: the window's browser sends its requests through a tiny proxy inside CapPo (reachable only from this PC), which looks names up with the network's DNS. Nothing else goes through CapPo, Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
                 </StackPanel>
             </Grid>
 
