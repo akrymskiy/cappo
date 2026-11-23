@@ -14,17 +14,14 @@ public enum RunMode
 /// <summary>CapPo's preferences, in settings.json in <see cref="AppInfo.DataDirectory"/>.</summary>
 public sealed class AppSettings
 {
-    /// <summary>The choices for <see cref="RecheckMinutes"/>.</summary>
-    public static readonly int[] RecheckChoices = [5, 15, 20, 30, 60];
-
     /// <summary>
-    /// On demand mode's floor. The Store build's background task timer won't run more often than every 15 minutes; the
-    /// GitHub build's scheduled task can, and its check (<c>--check</c>) is quick.
+    /// The choices for <see cref="RecheckMinutes"/>. The Store build starts at 15, because its background task timer
+    /// (On demand mode) won't run more often; the GitHub build's scheduled task can.
     /// </summary>
 #if STORE_BUILD
-    public const int OnDemandMinimumMinutes = 15;
+    public static readonly int[] RecheckChoices = [15, 20, 30, 60];
 #else
-    public const int OnDemandMinimumMinutes = 5;
+    public static readonly int[] RecheckChoices = [5, 15, 20, 30, 60];
 #endif
 
     private static string FilePath => Path.Combine(AppInfo.DataDirectory, "settings.json");
@@ -44,18 +41,19 @@ public sealed class AppSettings
     public bool StartMenuShortcutMade { get; set; }
 
     [JsonIgnore]
-    public TimeSpan RecheckInterval => TimeSpan.FromMinutes(Math.Max(RecheckMinutes, RecheckChoices[0]));
-
-    /// <summary>How often On demand mode has Windows start CapPo: the re-check interval, but not under the floor.</summary>
-    [JsonIgnore]
-    public int OnDemandMinutes => Math.Max(RecheckMinutes, OnDemandMinimumMinutes);
+    public TimeSpan RecheckInterval => TimeSpan.FromMinutes(RecheckMinutes);
 
     public static AppSettings Load()
     {
         try
         {
-            if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize(File.ReadAllText(FilePath), SettingsJson.Default.AppSettings) ?? new();
+            if (File.Exists(FilePath)
+                && JsonSerializer.Deserialize(File.ReadAllText(FilePath), SettingsJson.Default.AppSettings) is { } loaded)
+            {
+                // E.g. 5 minutes saved by a build that offered it.
+                loaded.RecheckMinutes = Math.Max(loaded.RecheckMinutes, RecheckChoices[0]);
+                return loaded;
+            }
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {

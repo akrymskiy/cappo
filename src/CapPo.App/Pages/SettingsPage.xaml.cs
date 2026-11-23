@@ -67,11 +67,10 @@ public sealed partial class SettingsPage : Page
         ProblemBar.IsOpen = Controller.RunModeProblem is not null;
         ProblemBar.Message = Controller.RunModeProblem ?? "";
 
-        var minutes = Controller.Settings.OnDemandMinutes;
-        var floor = Controller.Settings.RecheckMinutes < minutes ? " (Windows won't do it more often)" : "";
+        var minutes = Controller.Settings.RecheckMinutes;
         OnDemandDescription.Text = AppInfo.IsStoreBuild
-            ? $"Windows starts CapPo when the network changes and every {minutes} minutes{floor}, just to check. It opens only when there's a sign-in page."
-            : $"Windows starts CapPo when a network connects, when you sign in, and every {minutes} minutes{floor}, just to check. It opens only when there's a sign-in page.";
+            ? $"Windows starts CapPo when the network changes and every {minutes} minutes, just to check. It opens only when there's a sign-in page."
+            : $"Windows starts CapPo when a network connects, when you sign in, and every {minutes} minutes, just to check. It opens only when there's a sign-in page.";
         var onDemand = Controller.Settings.Mode == RunMode.OnDemand;
         ModeBar.IsOpen = onDemand;
         ModeBar.Message = "CapPo stays open until you exit it. After that, it starts by itself when it's needed.";
