@@ -110,7 +110,7 @@ public sealed class SimulatedPortal : IHostResolver, IAsyncDisposable
             }
             else if (host.StartsWith(PortalHost, StringComparison.OrdinalIgnoreCase) && path.StartsWith("/login", StringComparison.Ordinal))
             {
-                await RespondAsync(stream, 200, Page("Welcome to Simulated Hotel Wi-Fi",
+                await RespondAsync(stream, 200, ShowcaseName is { } name ? ShowcasePage(name) : Page("Welcome to Simulated Hotel Wi-Fi",
                     $"""
                     <p>This is CapPo's pretend captive portal. {(_sessionLength is { } l ? $"A sign-in lasts {l.TotalMinutes:0.#} minutes." : "")}</p>
                     <form method="post" action="/login"><label><input type="checkbox" required> I accept the terms</label>
@@ -132,6 +132,34 @@ public sealed class SimulatedPortal : IHostResolver, IAsyncDisposable
             // Not worth more for a simulation.
         }
     }
+
+    /// <summary>
+    /// Set: the sign-in page looks like a real hotel's, under this name, for screenshots (CapPo's --screenshots).
+    /// Signing in works the same.
+    /// </summary>
+    public string? ShowcaseName { get; init; }
+
+    private static string ShowcasePage(string name) =>
+        $$"""
+        <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+        <title>{{WebUtility.HtmlEncode(name)}}</title><style>
+        body{margin:0;font-family:Georgia,serif;background:#f4efe6;color:#2b2621}
+        header{background:#1f3a4d;color:#f4efe6;padding:2.2em 1em;text-align:center}
+        header h1{margin:0;font-weight:normal;letter-spacing:.06em}header p{margin:.4em 0 0;opacity:.8;font-style:italic}
+        main{max-width:26em;margin:2em auto;padding:2em;background:#fff;border-radius:6px;box-shadow:0 2px 12px #0002;font-family:Segoe UI,sans-serif}
+        label{display:block;margin:0 0 1em;font-size:.95em}input[type=text]{display:block;width:100%;box-sizing:border-box;margin-top:.3em;padding:.55em;font:inherit;border:1px solid #c9c1b4;border-radius:4px}
+        .terms{display:flex;gap:.5em;align-items:center}button{width:100%;padding:.75em;font:inherit;font-weight:600;color:#fff;background:#b0603a;border:0;border-radius:4px}
+        footer{text-align:center;font-size:.8em;color:#7a7065;font-family:Segoe UI,sans-serif}
+        </style></head><body>
+        <header><h1>{{WebUtility.HtmlEncode(name)}}</h1><p>Complimentary Wi-Fi for our guests</p></header>
+        <main><form method="post" action="/login">
+        <label>Room number<input type="text" value="1204"></label>
+        <label>Last name<input type="text" value="Corleone"></label>
+        <label class="terms"><input type="checkbox" required> I accept the terms of use</label>
+        <button type="submit">Connect</button></form></main>
+        <footer>Need help? Call the front desk at extension 0.</footer>
+        </body></html>
+        """;
 
     private static string Page(string title, string body) =>
         $$"""

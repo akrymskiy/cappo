@@ -82,7 +82,7 @@ internal sealed class AppController
     {
         get
         {
-            var simulated = _engine.IsSimulated ? " (Simulated portal.)" : "";
+            var simulated = _engine.IsSimulated && !Engine.IsShowcase ? " (Simulated portal.)" : "";
             if (Last is not { } last)
                 return "Looking at the network." + simulated;
             var dns = last.Network is { } n ? string.Join(", ", n.DnsServers) : "";

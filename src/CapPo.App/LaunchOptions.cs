@@ -12,9 +12,11 @@ namespace CapPo.App;
 /// expire, to try the sign-in window without a captive network.</item>
 /// <item><c>--pretend-no-webview2</c> (debug builds): act as if the WebView2 Runtime were missing, to try CapPo's
 /// warnings about it.</item>
+/// <item><c>--screenshots</c> (debug builds, with --simulate-portal): a hotel-like sign-in page and a made-up network
+/// name, for the Store's screenshots.</item>
 /// </list>
 /// </remarks>
-internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, bool BackgroundTaskServer, TimeSpan? Simulate, bool PretendNoWebView2 = false)
+internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, bool BackgroundTaskServer, TimeSpan? Simulate, bool PretendNoWebView2 = false, bool Screenshots = false)
 {
     public bool SimulatePortal => Simulate is not null;
 
@@ -30,11 +32,12 @@ internal sealed record LaunchOptions(bool Check, bool Startup, bool Unregister, 
                 ? TimeSpan.FromMinutes(m)
                 : Timeout.InfiniteTimeSpan;
 #endif
-        var pretendNoWebView2 = false;
+        bool pretendNoWebView2 = false, screenshots = false;
 #if DEBUG
         pretendNoWebView2 = Has("--pretend-no-webview2");
+        screenshots = Has("--screenshots");
 #endif
-        return new(Has("--check"), Has("--startup"), Has("--unregister"), Has("-RegisterForBGTaskServer"), simulate, pretendNoWebView2);
+        return new(Has("--check"), Has("--startup"), Has("--unregister"), Has("-RegisterForBGTaskServer"), simulate, pretendNoWebView2, screenshots);
     }
 
     /// <summary>From a launch redirected to the running CapPo: its arguments as one string.</summary>

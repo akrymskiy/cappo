@@ -26,7 +26,12 @@ internal sealed class Engine : IAsyncDisposable
         if (options.Simulate is not { } session)
             return new Engine(new PortalDetector(Log.Factory, new PortalDetectorOptions { ProbeTimeout = probeTimeout }), null);
 
-        var simulation = new SimulatedPortal(sessionLength: session == Timeout.InfiniteTimeSpan ? null : session);
+        var simulation = new SimulatedPortal(sessionLength: session == Timeout.InfiniteTimeSpan ? null : session)
+        {
+            ShowcaseName = options.Screenshots ? ScreenshotNetworkName : null,
+        };
+        if (options.Screenshots)
+            s_displayName = ScreenshotNetworkName;
         simulation.Start();
         Log.Info($"Simulated portal on {simulation.Address}:{simulation.Port}");
         return new Engine(new PortalDetector(Log.Factory, new PortalDetectorOptions
@@ -39,8 +44,16 @@ internal sealed class Engine : IAsyncDisposable
     }
 
     /// <summary>What to call the network in the UI: the Wi-Fi name if Windows will say, else the adapter's.</summary>
-    public static string NetworkName(DetectionResult? result) =>
-        result?.Network is { } network ? NetworkName(network.AdapterId, network.AdapterName) : "the network";
+    /// <summary>What --screenshots calls the network, so screenshots don't show the real one's name.</summary>
+    private const string ScreenshotNetworkName = "Hotel Wi-Fi";
+
+    private static string? s_displayName;
+
+    /// <summary>Screenshots (--screenshots): no "(Simulated portal.)" notes, and a made-up network name.</summary>
+    public static bool IsShowcase => s_displayName is not null;
+
+    public static string NetworkName(DetectionResult? result) => s_displayName
+        ?? (result?.Network is { } network ? NetworkName(network.AdapterId, network.AdapterName) : "the network");
 
     /// <param name="adapterName">What to say when Windows doesn't name the network, e.g. "Wi-Fi".</param>
     public static string NetworkName(string adapterId, string adapterName)
