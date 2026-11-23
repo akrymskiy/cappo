@@ -16,8 +16,9 @@ public sealed partial class AboutPage : Page
         Link(WebsiteLink, AppInfo.WebsiteUrl);
         Link(SupportLink, AppInfo.SupportUrl);
         Link(GitHubLink, AppInfo.GitHubUrl);
-        Link(SponsorLink, AppInfo.SponsorUrl);
-        Link(CoffeeLink, AppInfo.BuyMeACoffeeUrl);
+        // Buying it is how Store users support CapPo; a tip jar in a paid app looks odd.
+        Link(SponsorLink, AppInfo.IsStoreBuild ? "" : AppInfo.SponsorUrl);
+        Link(CoffeeLink, AppInfo.IsStoreBuild ? "" : AppInfo.BuyMeACoffeeUrl);
         Link(PrivacyLink, AppInfo.PrivacyUrl);
         Link(LicenseLink, AppInfo.LicenseUrl);
     }
