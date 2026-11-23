@@ -113,7 +113,7 @@ public sealed partial class DnsPage : Page
             DnsVerdict.Strict => (Encrypted, $"Encrypted only · {name}",
                 "On this network, Windows looks up every name with encrypted DNS and never falls back to plain DNS. A sign-in page can't open by itself with settings like these; CapPo opens it."),
             DnsVerdict.Fallback => (Fallback, $"Encrypted, with fallback · {name}",
-                "When an encrypted lookup fails, as it does behind a sign-in page, Windows asks again in plain DNS. Sign-in pages usually open by themselves, but some lookups go out unencrypted. To stop that, choose encrypted only in Windows' settings."),
+                "When an encrypted lookup fails, as it does behind a sign-in page, Windows asks the same server again in plain DNS, not the network's. Those lookups go out unencrypted, and many sign-in pages still don't open, because the network blocks outside DNS too. Choose encrypted only in Windows' settings, and let CapPo open sign-in pages."),
             DnsVerdict.Plain when main!.IsVpn => (Plain, $"Not encrypted by Windows · {name}",
                 $"Lookups to {string.Join(", ", plain)} are plain DNS, but they travel inside the VPN."),
             DnsVerdict.Plain => (Plain, $"Not encrypted · {name}",

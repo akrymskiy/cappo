@@ -16,9 +16,9 @@
             <Grid Style="{StaticResource CardStyle}">
                 <StackPanel Spacing="8">
                     <TextBlock TextWrapping="Wrap">
-                        <Run FontWeight="SemiBold" Text="CapPo" /><Run Text=" lets you keep encrypted DNS on (DNS over HTTPS, with no fallback to plain DNS) and still sign in to" />
+                        <Run FontWeight="SemiBold" Text="CapPo" /><Run Text=" lets you sign in to" />
                         <Run FontWeight="SemiBold" Text="Cap" /><Run Text="tive" />
-                        <Run FontWeight="SemiBold" Text="Po" /><Run Text="rtals (airport, hotel, library and café Wi-Fi)." />
+                        <Run FontWeight="SemiBold" Text="Po" /><Run Text="rtals (hotel, airport, library and café Wi-Fi) while Windows keeps your DNS encrypted. Only the sign-in window uses the portal's DNS." />
                     </TextBlock>
                     <TextBlock Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Text="Those networks' sign-in pages only load through the network's own DNS. CapPo's sign-in window is the only thing that uses it: the window's browser sends its requests through a tiny proxy inside CapPo (reachable only from this PC), which looks names up with the network's DNS. Nothing else goes through CapPo, Windows' DNS settings are never changed, and CapPo needs no administrator rights." />
                 </StackPanel>

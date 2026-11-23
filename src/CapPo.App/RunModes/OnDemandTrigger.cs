@@ -72,7 +72,7 @@ internal static class OnDemandTrigger
             <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
               <RegistrationInfo>
                 <Author>{AppInfo.Name}</Author>
-                <Description>Checks for a captive portal (airport, hotel or library Wi-Fi sign-in) when a network connects, and shows its sign-in page if there is one. Made by CapPo's On demand mode; CapPo removes it when switched to Always running, or with CapPo.exe --unregister.</Description>
+                <Description>Checks for a captive portal (hotel, airport or library Wi-Fi sign-in) when a network connects, and shows its sign-in page if there is one. Made by CapPo's On demand mode; CapPo removes it when switched to Always running, or with CapPo.exe --unregister.</Description>
               </RegistrationInfo>
               <Triggers>
                 <EventTrigger>
