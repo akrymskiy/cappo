@@ -50,7 +50,8 @@
         each one weakens the protection:
       </p>
       <ul class="choices">
-        <li><strong>Allow fallback to plain DNS.</strong> Your lookups leak exactly on strange networks, where it matters most.</li>
+        <li><strong>Allow fallback to plain DNS.</strong> Your lookups leak exactly on strange networks, where it matters most. And it often doesn't
+          even help: Windows falls back to your own DNS server, not the network's, and many portals block that too.</li>
         <li><strong>Turn encrypted DNS off for new networks.</strong> Then it only protects you at home.</li>
         <li><strong>Keep exceptions by hand.</strong> Turn it off, sign in, and remember to turn it back on. Every time.</li>
       </ul>
@@ -100,7 +101,7 @@
             <tr><td>For all Wi-Fi networks, unencrypted fallback off</td><td>The sign-in page never loads</td><td><strong>Needed</strong></td></tr>
             <tr><td>By policy, "Require DoH" (Group Policy or Intune)</td><td>Same</td><td><strong>Needed</strong></td></tr>
             <tr><td>Only for your home network</td><td>The page loads, but nothing you look up there is encrypted</td><td>Not needed</td></tr>
-            <tr><td>Any network, unencrypted fallback allowed</td><td>The page loads, and anyone who can block encrypted DNS can switch you to plain DNS</td><td>Not needed</td></tr>
+            <tr><td>For all Wi-Fi networks, unencrypted fallback allowed</td><td>Windows falls back to plain DNS on the server you set, not the network's. Many portals block that too; where they don't, your lookups go out unencrypted</td><td><strong>Often needed</strong></td></tr>
           </tbody>
         </table>
       </div>

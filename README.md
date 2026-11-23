@@ -10,14 +10,14 @@ You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare)
 
 ## Do you need it?
 
-Only if encrypted DNS is required on **every** network, including ones you haven't joined yet. Windows 11 keeps DNS settings per Wi-Fi network, so where you set it decides whether you need CapPo:
+Only if you want encrypted DNS on **every** network, including ones you haven't joined yet. Windows 11 keeps DNS settings per Wi-Fi network, so where you set it decides whether you need CapPo:
 
 | Where encrypted DNS is set | On a new hotel network | CapPo |
 |---|---|---|
 | For all Wi-Fi networks (Settings > Network & internet > Wi-Fi > Hardware properties), unencrypted fallback off | Encrypted DNS is blocked, and the sign-in page never loads | **Needed** |
 | By policy, "Require DoH" (Group Policy or Intune) | Same | **Needed** |
 | Only for your home network | Windows uses the network's plain DNS, so the sign-in page loads, but nothing you look up there is encrypted | Not needed |
-| Any network, with unencrypted fallback allowed | Windows quietly falls back to plain DNS when encrypted DNS fails, so the page loads, and anyone who can block encrypted DNS can switch you to plain DNS | Not needed |
+| For all Wi-Fi networks, with unencrypted fallback allowed | Windows falls back to plain DNS on the server you set, not the network's. Many portals block outside DNS, so the sign-in page still never loads; where it does load, your lookups go out unencrypted, and anyone who can block encrypted DNS can make that happen | **Often needed** |
 
 So CapPo is for people who want encrypted DNS everywhere, with no exceptions. Apps that take over DNS themselves (VPNs, DNS filtering apps) have their own ways around portals; CapPo is for Windows' built-in encrypted DNS.
 
