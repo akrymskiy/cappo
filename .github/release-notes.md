@@ -1,6 +1,6 @@
 *Sign-in page? I know a guy.*
 
-Sign in to captive portals (hotel, airport, library and café Wi-Fi) while Windows keeps your DNS encrypted. No fallback to plain DNS, ever. See [cappo.krymskiy.net](https://cappo.krymskiy.net/).
+Sign in to captive portals (hotel, airport, library and café Wi-Fi) while Windows keeps your DNS encrypted. Only the sign-in window uses the portal's DNS. See [cappo.krymskiy.net](https://cappo.krymskiy.net/).
 
 ### Install
 
