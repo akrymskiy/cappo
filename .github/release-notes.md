@@ -1,6 +1,6 @@
 *Sign-in page? I know a guy.*
 
-CapPo lets you keep Windows' encrypted DNS on everywhere, with no fallback to plain DNS, and still sign in to captive portals (airport, hotel, library and café Wi-Fi). See [cappo.krymskiy.net](https://cappo.krymskiy.net/).
+Sign in to captive portals (hotel, airport, library and café Wi-Fi) while Windows keeps your DNS encrypted. No fallback to plain DNS, ever. See [cappo.krymskiy.net](https://cappo.krymskiy.net/).
 
 ### Install
 

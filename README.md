@@ -2,7 +2,7 @@
 
 *Sign-in page? I know a guy.*
 
-Keep encrypted DNS on, and still sign in to **Cap**tive **Po**rtals (airport, hotel, library and café Wi-Fi).
+Sign in to **Cap**tive **Po**rtals (hotel, airport, library and café Wi-Fi) while Windows keeps your DNS encrypted. No fallback to plain DNS, ever.
 
 You've set Windows to encrypted DNS (DNS over HTTPS, e.g. NextDNS or Cloudflare), with fallback to plain DNS turned off. Then you join hotel Wi-Fi, and the sign-in page never appears: the network blocks encrypted DNS until you sign in, and you can't sign in without its DNS. The usual fix is to turn encrypted DNS off, sign in, and remember to turn it back on.
 
