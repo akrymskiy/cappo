@@ -7,7 +7,7 @@ Sign in to captive portals (airport, hotel, library and café Wi-Fi) while Windo
 1. Download the zip for your PC: **x64** for most PCs, **ARM64** for PCs with an ARM processor such as Snapdragon (Settings > System > About > System type says which).
 2. Unzip it anywhere, open the CapPo folder, and run `CapPo.exe`. It adds itself to the Start menu.
 
-**Windows may warn you the first time** ("Windows protected your PC"), because this build isn't code-signed: click **More info**, then **Run anyway**. If Smart App Control blocks it, or you'd rather skip the warning, get the Microsoft Store version (coming soon). `SHA256SUMS.txt` has the zips' checksums.
+**Windows may warn you the first time** ("Windows protected your PC"), because this build isn't code-signed: click **More info**, then **Run anyway**. If Smart App Control blocks it, or you'd rather skip the warning, get the [Microsoft Store version](https://apps.microsoft.com/detail/9NHT91D939HJ). `SHA256SUMS.txt` has the zips' checksums.
 
 To remove CapPo, run `CapPo.exe --unregister` (it removes its Start menu shortcut, startup entry and scheduled task), then delete the folder and `%LocalAppData%\CapPo`.
 

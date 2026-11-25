@@ -101,8 +101,6 @@ code {
 }
 .button.primary { background: var(--accent); color: var(--bg); }
 .button.secondary { color: var(--accent); }
-.button.soon { border-color: var(--line); color: var(--muted); cursor: default; }
-.button.soon small { font-weight: 400; }
 
 section { margin-top: 48px; }
 h2 { font-size: 26px; line-height: 1.25; margin: 0 0 12px; letter-spacing: -0.2px; }
