@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CapPo guide</title>
+  <meta name="description" content="How to use CapPo: the notification area icon, the sign-in window, Settings, the DNS page, VPNs and the trial.">
+  <link rel="icon" href="favicon-light.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="favicon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" translate="no" href="./">
+        <img class="logo-light" src="icon-light.png" alt=""><img class="logo-dark" src="icon-dark.png" alt="">CapPo
+      </a>
+      <nav>
+        <a href="guide" aria-current="page">Guide</a>
+        <a href="support">Support</a>
+        <a href="privacy">Privacy</a>
+        <a href="https://github.com/akrymskiy/cappo">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap page">
+    <h1>Guide</h1>
+    <p class="updated">Everything <span class="cp" translate="no">CapPo</span> shows you, and what it means.</p>
+
+    <p>
+      Most of the time there's nothing to do. <span translate="no">CapPo</span> sits in the notification area, and when a
+      network wants you to sign in, its sign-in window opens by itself. This page is for everything else.
+    </p>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      <span translate="no">CapPo</span> works with Windows' own encrypted DNS. Set it up for all Wi-Fi networks, so
+      networks you haven't joined yet use it too, and with the fallback to plain DNS turned off. In Windows 11:
+    </p>
+    <ol>
+      <li>Open Settings &gt; Network &amp; internet &gt; Wi-Fi &gt; <strong>Hardware properties</strong>. (For a
+        cable, open Ethernet instead.)</li>
+      <li>Next to <strong>DNS server assignment</strong>, choose <strong>Edit</strong>, then <strong>Manual</strong>,
+        and turn on <strong>IPv4</strong>.</li>
+      <li>In <strong>Preferred DNS</strong>, type your provider's address. Set <strong>DNS over HTTPS</strong> to
+        <strong>On (manual template)</strong>, type your provider's template, and set <strong>Fallback to
+        plaintext</strong> to <strong>Off</strong>.</li>
+      <li>Do the same for <strong>Alternate DNS</strong>, and for <strong>IPv6</strong> if your provider has IPv6
+        addresses.</li>
+      <li>Choose <strong>Save</strong>.</li>
+    </ol>
+    <p>
+      Your provider's setup page has the addresses and the template. NextDNS, for example, shows them filled in for
+      your account under Setup at <a href="https://my.nextdns.io">my.nextdns.io</a>.
+    </p>
+    <p>
+      Then open <span translate="no">CapPo</span>'s <a href="#dns">DNS page</a>: it should say <strong>Encrypted
+      only</strong>, on every Wi-Fi network. Windows 10 has no setting for this, so these steps are for Windows 11.
+    </p>
+
+    <h2 id="icon">The icon in the notification area</h2>
+    <p>
+      The icon is a fedora over a Wi-Fi signal. Point at it to see the network's status. If you don't see it, it may be
+      hidden behind the arrow next to the clock: drag it out, or turn it on in Settings &gt; Personalization &gt;
+      Taskbar &gt; Other system tray icons.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>The icon</th><th>Status</th><th>What it means</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Hat and Wi-Fi</td><td>Online</td><td>The internet works. Your DNS stays encrypted.</td></tr>
+          <tr><td>A feather in the hat</td><td>Sign-in needed</td><td>The network wants you to sign in. Click the icon to open the sign-in window.</td></tr>
+          <tr><td>Wi-Fi arc faded</td><td>No internet</td><td>Connected, but nothing answers, not even a sign-in page.</td></tr>
+          <tr><td>All faded</td><td>Not connected</td><td>No network, or <span translate="no">CapPo</span> hasn't checked yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <strong>Click</strong> the icon to open the sign-in window when a network is waiting for you, or
+      <span translate="no">CapPo</span>'s window otherwise. <strong>Right-click</strong> it for the menu:
+    </p>
+    <ul>
+      <li><strong>Sign in…</strong> (only when a network wants you to sign in) opens the sign-in window.</li>
+      <li><strong>Check now</strong> checks the network right away and tells you what it found in a notification.</li>
+      <li><strong>Settings</strong> and <strong>About <span translate="no">CapPo</span></strong> open
+        <span translate="no">CapPo</span>'s window.</li>
+      <li><strong>Exit</strong> closes <span translate="no">CapPo</span>. In On demand mode, Windows still starts it
+        when it's needed.</li>
+    </ul>
+
+    <h2 id="sign-in">Signing in</h2>
+    <p>
+      When <span translate="no">CapPo</span> finds a sign-in page, it opens it in its own window, called
+      <strong>Sign in to</strong> and the network's name. Only this window uses the network's DNS. Sign in as you would
+      in a browser: accept the terms, type the room number, whatever the network asks.
+    </p>
+    <ul>
+      <li>At the top: <strong>Back</strong>, <strong>Reload</strong>, and the address of the page you're on, with a
+        lock when it's HTTPS. Check the address before you type a password or a card number, as you would anywhere.</li>
+      <li>Under the address, what <span translate="no">CapPo</span> is doing: it checks every few seconds whether
+        you're through.</li>
+      <li><strong>Start over</strong> opens the page that brings up the network's sign-in page again, if you got lost
+        or the page stopped working.</li>
+    </ul>
+    <p>
+      Once you're online, the window says <strong>You're online</strong> and closes by itself, and a notification says
+      which network you're signed in to. <span translate="no">CapPo</span> also clears Windows' DNS cache, which still
+      holds the lookups that failed before you signed in.
+    </p>
+    <p>
+      If you close the window yourself, it stays closed until something changes, such as another network. To open it
+      again, click <span translate="no">CapPo</span>'s icon.
+    </p>
+    <p>
+      Many portals sign you out after a while. <span translate="no">CapPo</span> checks again every so often (see
+      <a href="#recheck">Re-check interval</a>), and opens the sign-in window again when that happens.
+    </p>
+
+    <h2 id="settings">Settings</h2>
+    <p>
+      At the top, the network's status as <span translate="no">CapPo</span> sees it, when it last checked, and
+      <strong>Check now</strong>. When a network wants you to sign in, there's a <strong>Sign in</strong> button too.
+    </p>
+
+    <h3 id="run-modes">How <span translate="no">CapPo</span> runs</h3>
+    <ul>
+      <li><strong>Always running</strong> (the default): <span translate="no">CapPo</span> stays in the notification
+        area and notices network changes the moment they happen.</li>
+      <li><strong>On demand</strong>: <span translate="no">CapPo</span> doesn't stay running. Windows starts it when a
+        network connects and then every so often (the re-check interval), for a check that takes about a second. It only
+        shows up when there's a sign-in page, and then it stays until you're online. After you switch to On demand,
+        <span translate="no">CapPo</span> stays open until you exit it; from then on, it starts by itself when it's
+        needed.</li>
+    </ul>
+    <p>
+      On demand uses Windows' own tools to start <span translate="no">CapPo</span>: a Task Scheduler task in the GitHub
+      version, and a background task in the Microsoft Store version. Neither needs administrator rights.
+    </p>
+
+    <h3 id="launch-at-login">Launch at login</h3>
+    <p>
+      In Always running mode, starts <span translate="no">CapPo</span> in the notification area when you sign in to
+      Windows. It's on by default. If you turned <span translate="no">CapPo</span> off in Task Manager's Startup apps,
+      Settings says so, and you turn it back on there. In On demand mode this setting isn't needed, since Windows starts
+      <span translate="no">CapPo</span> when a network connects.
+    </p>
+
+    <h3 id="recheck">Re-check interval</h3>
+    <p>
+      How often <span translate="no">CapPo</span> checks again while you're online, for portals that sign you out when
+      a session runs out: every 5, 15, 20 (the default), 30 or 60 minutes. The Microsoft Store version starts at 15
+      minutes, the shortest that Windows allows for a Store app's background task.
+    </p>
+
+    <h2 id="dns">The DNS page</h2>
+    <p>
+      The DNS page shows how Windows looks up names on the connection your internet traffic goes through. It only
+      reads Windows' settings; to change them, use <strong>Windows settings</strong> on the page, which opens the right
+      page of Windows' Settings.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>The DNS page says</th><th>What it means</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Encrypted only</strong></td><td>Windows looks up every name with encrypted DNS and never falls back to plain DNS. Sign-in pages can't open by themselves, so this is where <span translate="no">CapPo</span> is needed. When the page adds "On every Wi-Fi network, including ones you haven't joined yet", new networks are covered too.</td></tr>
+          <tr><td><strong>Encrypted, with fallback</strong></td><td>When an encrypted lookup fails, as it does behind a sign-in page, Windows asks the same server again in plain DNS. Those lookups aren't private, and many sign-in pages still don't open. Turn the fallback off, and let <span translate="no">CapPo</span> handle sign-in pages.</td></tr>
+          <tr><td><strong>Not encrypted</strong></td><td>Windows uses plain DNS here. Sign-in pages open by themselves, but your lookups aren't private.</td></tr>
+          <tr><td><strong>Not encrypted by Windows</strong></td><td>A VPN carries your traffic, and its DNS is plain, but it travels inside the VPN.</td></tr>
+          <tr><td><strong>Encrypted DNS is turned off</strong></td><td>Your organization's Group Policy doesn't allow encrypted DNS on this PC.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Below that, for each network connection:</p>
+    <ul>
+      <li>its DNS servers, and whether each one is <strong>encrypted only</strong>, <strong>falls back to plain
+        DNS</strong>, or is <strong>plain DNS</strong>;</li>
+      <li>where the servers come from: typed in <strong>for all Wi-Fi networks</strong>, typed in <strong>for this Wi-Fi
+        network only</strong> (a network you join for the first time then uses its own DNS, unencrypted), typed in for
+        this connection, or <strong>handed out by the network</strong> (DHCP);</li>
+      <li>which connection is a VPN, and which one carries your internet traffic.</li>
+    </ul>
+    <p>
+      If your organization sets encrypted DNS by Group Policy, the page says whether it's required or allowed. Under
+      <strong>Names sent to other servers</strong> (only shown when there are such rules), it lists rules that send
+      some names to particular DNS servers (Windows' Name Resolution Policy Table), set by Group Policy, a VPN or
+      another app. Lookups for those names don't use your encrypted DNS.
+    </p>
+
+    <h2 id="vpn">VPNs</h2>
+    <p>
+      <span translate="no">CapPo</span> notices when a VPN carries your traffic. Its status then says
+      <strong>Online through a VPN</strong>, with the VPN's name, or <strong>No internet through the VPN</strong> when
+      nothing answers through it.
+    </p>
+    <p>
+      A VPN can't connect until you've signed in to the network, and a VPN that blocks traffic outside the tunnel (a
+      "kill switch") blocks the sign-in window too. If you're stuck, turn the VPN off, sign in, and turn it back on.
+      <span translate="no">CapPo</span> says so when it sees this happen.
+    </p>
+
+    <h2 id="about">About</h2>
+    <p>
+      <strong>About <span translate="no">CapPo</span></strong> shows the version and which one you have (Microsoft
+      Store or GitHub), links to this site and the source code, and <strong>Open <span translate="no">CapPo</span>'s
+      folder</strong>, which holds its settings and its log, <code>cappo.log</code>. The log stays on your PC; it's
+      useful when you <a href="support">report a problem</a>.
+    </p>
+
+    <h2 id="trial">The Microsoft Store version's trial</h2>
+    <p>
+      The Microsoft Store version comes with a 30-day trial. Settings shows how many days are left. When the trial
+      ends, <span translate="no">CapPo</span> keeps showing the network's status, but it no longer opens sign-in pages,
+      and the icon stays faded. Buy it from <strong>Buy <span translate="no">CapPo</span></strong> in Settings or in the
+      icon's menu. The GitHub version has no trial and no limits.
+    </p>
+
+    <h2 id="github">The GitHub version</h2>
+    <ul>
+      <li>The first time you run it, <span translate="no">CapPo</span> adds itself to the Start menu.</li>
+      <li>Its settings and log are in <code>%LocalAppData%\CapPo</code>.</li>
+      <li>Launch at login uses your user's startup entry; On demand uses a Task Scheduler task named
+        <strong><span translate="no">CapPo</span> portal check</strong> and your user name.</li>
+      <li>If you move <span translate="no">CapPo</span>'s folder, run it once from the new place, so its Start menu
+        shortcut, startup entry and task point there.</li>
+      <li>To remove it, run <code>CapPo.exe --unregister</code>, then delete the folder and
+        <code>%LocalAppData%\CapPo</code>.</li>
+    </ul>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="motto">Your DNS is under my protection. <span translate="no">Capisce?</span></span>
+      <span><a href="guide">Guide</a> · <a href="support">Support</a> · <a href="privacy">Privacy</a> · <a href="https://github.com/akrymskiy/cappo">Source code</a> · © 2026 Alex Krymskiy · Made with love in Brooklyn</span>
+    </div>
+  </footer>
+</body>
+</html>
