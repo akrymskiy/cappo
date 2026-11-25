@@ -61,7 +61,9 @@ public sealed partial class SettingsPage : Page
         {
             LicenseBar.Severity = InfoBarSeverity.Informational;
             LicenseBar.Title = "Trial";
-            LicenseBar.Message = remaining.TotalDays >= 1 ? $"{(int)remaining.TotalDays} days left." : "Ends today.";
+            // Say what ending means up front: Store policy 10.8.4 wants the trial's terms clear, and the listing can't say it.
+            LicenseBar.Message = (remaining.TotalDays >= 1 ? $"{(int)remaining.TotalDays} days left." : "Ends today.")
+                + " After that, CapPo still shows the network's status but no longer opens sign-in pages.";
         }
 
         ProblemBar.IsOpen = Controller.RunModeProblem is not null;
