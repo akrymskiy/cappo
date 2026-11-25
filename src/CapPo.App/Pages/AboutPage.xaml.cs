@@ -12,8 +12,8 @@ public sealed partial class AboutPage : Page
         ShowLogo();
         ActualThemeChanged += (_, _) => ShowLogo();
         VersionText.Text = $"Version {AppInfo.Version} · {(AppInfo.IsStoreBuild ? "Microsoft Store" : "GitHub")} build";
-        // Store reviewers read "free software" as a price claim (policy 10.1.4.3), so the paid build says open source.
-        LicenseText.Text = $"CapPo is {(AppInfo.IsStoreBuild ? "open source" : "free software")}, under the {AppInfo.LicenseName}. Copyright © 2026 Alex Krymskiy.";
+        // Not "free software": Store reviewers read it as a price claim (policy 10.1.4.3), and so do many people.
+        LicenseText.Text = $"CapPo is open source, under the {AppInfo.LicenseName}. Copyright © 2026 Alex Krymskiy.";
         Link(WebsiteLink, AppInfo.WebsiteUrl);
         Link(SupportLink, AppInfo.SupportUrl);
         Link(GitHubLink, AppInfo.GitHubUrl);
